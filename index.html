@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en" class="bg-gray-900">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+      html, body {
+        background-color: #111827; /* This matches Tailwind's bg-gray-900 */
+      }
+    </style>
+    <script src="https://js.stripe.com/v3/" async></script>
+    <title>AI Market Analyzer</title>
+    <script>
+      // This helps ensure reCAPTCHA loads properly
+      if (typeof window.grecaptcha === 'undefined') {
+        window.grecaptcha = {};
+      }
+    </script>
+  </head>
+  <body class="bg-gray-900">
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

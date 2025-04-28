@@ -1,0 +1,66 @@
+/* Silver Theme Styling for AI Chat Page */
+.silver-theme-container {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.98) 0%, rgba(39, 39, 42, 0.95) 50%, rgba(24, 24, 27, 0.98) 100%) !important;
+  color: #ffffff !important;
+  height: calc(100vh - 12rem) !important;
+  position: fixed !important;
+  top: 4rem !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 8rem !important;
+  overflow-y: auto !important;
+  box-shadow: inset 0 0 40px rgba(0, 133, 215, 0.2) !important;
+  transition: all 0.3s ease-in-out !important;
+}
+
+/* Sidebar expanded state */
+.silver-theme-container.sidebar-expanded {
+  padding-left: 16rem !important;
+}
+
+/* Sidebar collapsed state */
+.silver-theme-container.sidebar-collapsed {
+  padding-left: 5rem !important;
+}
+
+.silver-theme-container.dark {
+  background: linear-gradient(135deg, rgba(24, 24, 27, 0.98) 0%, rgba(39, 39, 42, 0.95) 50%, rgba(24, 24, 27, 0.98) 100%) !important;
+  color: #ffffff !important;
+  box-shadow: inset 0 0 40px rgba(0, 133, 215, 0.2) !important;
+}
+
+/* Force all text elements to use the navbar blue */
+.silver-theme *, .silver-theme *::before, .silver-theme *::after {
+  color: #ffffff !important;
+}
+
+/* Apply the token styling to chat elements */
+.silver-text, .silver-theme h1, .silver-theme h2, .silver-theme p, .silver-theme span,
+.silver-theme div, .silver-theme button, .silver-theme input,
+.silver-theme textarea, .silver-theme select, .silver-theme option,
+.silver-theme a, .silver-theme label, .silver-theme strong, .silver-theme em {
+  color: #ffffff !important;
+  text-shadow: 0 0 5px rgba(0, 133, 215, 0.3) !important;
+}
+
+/* Target all icons in chat */
+.silver-theme svg {
+  color: #ffffff !important; /* Changed from #00A9E0 */
+  filter: drop-shadow(0 0 5px rgba(0, 133, 215, 0.3)) !important;
+}
+
+/* Card styling */
+.silver-card {
+  background: rgba(24, 24, 27, 0.8) !important;
+  border: 1px solid rgba(0, 133, 215, 0.3) !important;
+  box-shadow: 0 2px 24px 0 rgba(0, 133, 215, 0.2) !important;
+  backdrop-filter: blur(5px) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Fix for body and html to prevent any background showing through */
+body.silver-theme, html.silver-theme {
+  margin: 0 !important;
+  padding: 0 !important;
+  overflow-x: hidden !important;
+}

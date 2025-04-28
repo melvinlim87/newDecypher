@@ -1,0 +1,68 @@
+.market-ticker-slider {
+  padding: 10px 0;
+  position: relative;
+  padding-bottom: 60px; /* Space for navigation arrows */
+}
+
+.market-ticker-slider .swiper-slide {
+  height: auto;
+  display: flex;
+  justify-content: center;
+}
+
+/* Make sure the ticker widgets are fully visible */
+.market-ticker-slider .tradingview-widget-container,
+.tradingview-widget-container {
+  width: 100% !important;
+  min-width: 0 !important;
+  margin: 0 !important;
+  background-color: rgba(30, 35, 41, 0.95);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+/* Customize widget appearance */
+.market-ticker-slider .tradingview-widget-container__widget,
+.tradingview-widget-container__widget {
+  height: 78px !important;
+  background-color: transparent !important;
+}
+
+.market-ticker-slider .tradingview-widget-container iframe,
+.tradingview-widget-container iframe {
+  height: 78px !important;
+  border: none !important;
+}
+
+/* Navigation arrows */
+.market-ticker-slider .swiper-button-next,
+.market-ticker-slider .swiper-button-prev {
+  color: #9ca3af;
+  transition: color 0.2s;
+  width: 44px;
+  height: 44px;
+  background-color: rgba(30, 35, 41, 0.95);
+  border-radius: 50%;
+  top: auto;
+  bottom: 0;
+  transform: none;
+}
+
+.market-ticker-slider .swiper-button-next {
+  right: calc(50% - 60px);
+}
+
+.market-ticker-slider .swiper-button-prev {
+  left: calc(50% - 60px);
+}
+
+.market-ticker-slider .swiper-button-next:hover,
+.market-ticker-slider .swiper-button-prev:hover {
+  color: #f3f4f6;
+}
+
+.market-ticker-slider .swiper-button-next::after,
+.market-ticker-slider .swiper-button-prev::after {
+  font-size: 18px;
+  font-weight: bold;
+}

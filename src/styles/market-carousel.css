@@ -1,0 +1,24 @@
+.market-carousel .swiper-button-next,
+.market-carousel .swiper-button-prev {
+  color: #818cf8;
+  width: 35px;
+  height: 35px;
+  background-color: rgba(31, 41, 55, 0.7);
+  border-radius: 50%;
+  backdrop-filter: blur(4px);
+}
+
+.market-carousel .swiper-button-next:after,
+.market-carousel .swiper-button-prev:after {
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.market-carousel .swiper-button-disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.market-carousel {
+  padding: 0 40px;
+}

@@ -1,0 +1,39 @@
+{
+  /* Visit https://firebase.google.com/docs/database/security to learn more about security rules. */
+  "rules": {
+    "users": {
+      "$userId": {
+        // Allow read/write if the user is authenticated with Firebase
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid",
+        "chatSessions": {
+          ".indexOn": ["startedAt"]
+        },
+        "history": {
+          ".read": "$userId === auth.uid",
+          ".write": true
+        },
+        "referrals": {
+          ".read": true,
+          ".write": "$userId === auth.uid"
+        },
+        "referralCode": {
+          ".read": true,
+          ".write": "$userId === auth.uid"
+        }
+      }
+    },
+    "referrals": {
+      "$referralCode": {
+        ".read": true,
+        ".write": "$referralCode === auth.uid"
+      }
+    },
+    "analyses": {
+      "$userId": {
+        ".read": "$userId === auth.uid",
+        ".write": "$userId === auth.uid"
+      }
+    }
+  }
+}

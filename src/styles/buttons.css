@@ -1,0 +1,12 @@
+/* Button Styles */
+.btn-primary {
+  @apply bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium 
+  hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 
+  transform hover:scale-105 shadow-lg hover:shadow-blue-500/30;
+}
+
+.btn-secondary {
+  @apply bg-gray-800 border border-gray-700 text-white font-medium 
+  hover:bg-gray-700 hover:border-blue-500/50 transition-all duration-300 
+  transform hover:scale-105 shadow-lg;
+}

@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: ai-market-analyzer-proxy
+    env: node
+    buildCommand: cd backend && npm install
+    startCommand: cd backend && node server.js
+    envVars:
+      - key: VITE_CHART_IMG_API_KEY
+        sync: false
+      - key: PORT
+        value: 10000
+    buildFilter:
+      paths:
+        - backend/**
+        - .env

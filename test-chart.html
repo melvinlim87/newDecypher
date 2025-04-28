@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Chart Test</title>
+    <style>
+        body { padding: 20px; font-family: Arial, sans-serif; }
+        .container { max-width: 1200px; margin: 0 auto; }
+        .controls { margin-bottom: 20px; }
+        .controls label { display: block; margin: 10px 0 5px; }
+        .controls input, .controls select { width: 100%; padding: 5px; }
+        button { 
+            margin: 20px 0;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover { background: #0056b3; }
+        #result {
+            margin: 20px 0;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        .error { color: red; }
+        .success { color: green; }
+        .loading { color: blue; }
+        #chartImage {
+            max-width: 100%;
+            height: auto;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Chart Test</h1>
+        <div class="controls">
+            <label for="symbol">Symbol:</label>
+            <input type="text" id="symbol" value="BINANCE:BTCUSDT">
+            
+            <label for="interval">Interval:</label>
+            <select id="interval">
+                <option value="1m">1 minute</option>
+                <option value="5m">5 minutes</option>
+                <option value="15m">15 minutes</option>
+                <option value="30m">30 minutes</option>
+                <option value="1h" selected>1 hour</option>
+                <option value="4h">4 hours</option>
+                <option value="1D">1 day</option>
+                <option value="1W">1 week</option>
+            </select>
+
+            <label for="range">Range:</label>
+            <select id="range">
+                <option value="1D">1 day</option>
+                <option value="1W">1 week</option>
+                <option value="1M">1 month</option>
+                <option value="3M">3 months</option>
+                <option value="6M" selected>6 months</option>
+                <option value="12M">1 year</option>
+                <option value="60M">5 years</option>
+            </select>
+
+            <label for="theme">Theme:</label>
+            <select id="theme">
+                <option value="light">Light</option>
+                <option value="dark" selected>Dark</option>
+            </select>
+        </div>
+
+        <button onclick="getChart()">Get Chart</button>
+        <div id="result"></div>
+        <img id="chartImage" style="display: none;"/>
+    </div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+        const chartImage = document.getElementById('chartImage');
+
+        function showResult(message, type = 'success') {
+            resultDiv.innerHTML = `<div class="${type}">${message}</div>`;
+        }
+
+        async function getChart() {
+            showResult('Loading chart...', 'loading');
+            chartImage.style.display = 'none';
+
+            try {
+                // Get values from form
+                const symbol = document.getElementById('symbol').value;
+                const interval = document.getElementById('interval').value;
+                const range = document.getElementById('range').value;
+                const theme = document.getElementById('theme').value;
+
+                // Build URL with query parameters
+                const params = new URLSearchParams({
+                    symbol,
+                    interval,
+                    range,
+                    theme,
+                    studies: 'RSI@tv-basicstudies,MACD@tv-basicstudies',
+                    timezone: 'Etc/UTC',
+                    height: '600',
+                    width: '1000',
+                    details: 'true'
+                });
+
+                const response = await fetch(`http://localhost:3000/api/chart?${params}`);
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.details || 'Failed to fetch chart');
+                }
+
+                const contentType = response.headers.get('Content-Type');
+                if (!contentType?.includes('image')) {
+                    throw new Error(`Invalid content type: ${contentType}`);
+                }
+
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                
+                chartImage.src = imageUrl;
+                chartImage.style.display = 'block';
+                showResult('Chart loaded successfully!');
+
+            } catch (error) {
+                showResult(error.message, 'error');
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>

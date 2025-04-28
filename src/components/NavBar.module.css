@@ -1,0 +1,168 @@
+:root {
+  /* Light mode colors */
+  --navbar-bg: #BFC3C7;
+  --logo-inner-blue: #ffffff; /* Changed from #00A9E0 */
+  --hex-border: #BFC3C7;
+  --main-title: #E3E5E7;
+  --tagline-gray: #A5A9AD;
+  --divider-dot: #75C9F1;
+}
+
+.navbar--light {
+  background: linear-gradient(90deg, #B0B4B9 0%, #D3D6D9 100%) !important;
+  color: var(--main-title) !important;
+  box-shadow: 0 0 20px rgba(109, 114, 120, 0.3) !important;
+  border-bottom: 1px solid rgba(109, 114, 120, 0.3) !important;
+}
+
+.navbar--light .navbar-logo {
+  border-color: var(--hex-border);
+}
+
+.navbar--light .navbar-logo-inner {
+  background: var(--logo-inner-blue);
+}
+
+.navbar--light .navbar-title {
+  color: var(--main-title);
+}
+
+.navbar--light .navbar-tagline {
+  color: var(--tagline-gray);
+}
+
+.navbar--light .navbar-divider-dot {
+  background: var(--divider-dot);
+}
+
+/* Dark mode colors */
+[data-theme='dark'] {
+  --logo-metallic: #C9CCCF;
+  --logo-shadow: #6D7278;
+  --logo-fill: #1DA1F2;
+  --logo-bar-base: #147BC1;
+  --tagline-gray: #8C8F93;
+  --divider-dot: #ADB0B3;
+}
+
+.navbar--dark {
+  background: linear-gradient(90deg, #B0B4B9 0%, #D3D6D9 100%) !important;
+  color: var(--logo-metallic) !important;
+  box-shadow: 0 0 20px rgba(109, 114, 120, 0.5) !important;
+  border-bottom: 1px solid #6D7278 !important;
+}
+
+.navbar--dark .navbar-logo {
+  border-color: var(--logo-metallic);
+  box-shadow: 0 2px 8px var(--logo-shadow);
+}
+
+.navbar--dark .navbar-logo-inner {
+  background: linear-gradient(180deg, var(--logo-fill), var(--logo-bar-base));
+}
+
+.navbar--dark .navbar-title {
+  color: var(--logo-metallic);
+  text-shadow: 0 2px 4px var(--logo-shadow);
+}
+
+.navbar--dark .navbar-title--metallic {
+  font-family: 'Montserrat', 'Gotham', Arial, sans-serif !important;
+  font-size: 2rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.18em !important;
+  background: linear-gradient(105deg, #f4f6f8 0%, #c9cccf 20%, #bfc3c7 40%, #e3e5e7 60%, #bfc3c7 80%, #6d7278 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  color: transparent !important;
+  /* 3D metallic shadow and outline */
+  text-shadow:
+    0 3px 8px #6d7278cc,
+    0 1px 0 #fff,
+    0 0.5px 0 #bfc3c7,
+    1px 1px 0 #6d7278,
+    0 0 2px #c9cccf,
+    0 0 1px #fff !important;
+  filter: brightness(1.12) contrast(1.25) !important;
+  padding-right: 4px !important;
+  padding-left: 2px !important;
+  border-radius: 2px !important;
+}
+
+
+.navbar--dark .navbar-tagline {
+  color: var(--tagline-gray);
+}
+
+.navbar--dark .navbar-divider-dot {
+  background: var(--divider-dot);
+}
+
+/* Profile/User/Token/Logout styles for dark mode */
+.navbar--dark .navbar-profile,
+.navbar--dark .navbar-logout,
+.navbar--dark .navbar-token {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  background: transparent !important;
+  text-shadow: 0 2px 4px var(--logo-shadow) !important;
+}
+.navbar--dark .navbar-profile:hover,
+.navbar--dark .navbar-logout:hover,
+.navbar--dark .navbar-token:hover {
+  background: rgba(109, 114, 120, 0.10) !important;
+  color: #fff !important;
+  fill: #fff !important;
+}
+
+.navbar-container {
+  min-height: 80px;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0;
+  padding-right: 0;
+}
+
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 40px;
+  min-height: 40px;
+  margin-right: 0.5rem;
+}
+
+.navbar-title {
+  display: block;
+  line-height: 1.15;
+  margin-bottom: 0;
+  padding: 0;
+}
+
+.navbar-token {
+  margin-right: 0.5rem;
+  display: flex;
+  align-items: center;
+  min-width: 40px;
+  min-height: 40px;
+}
+
+/* Profile/User/Token/Logout styles for light mode */
+.navbar--light .navbar-profile,
+.navbar--light .navbar-logout,
+.navbar--light .navbar-token {
+  color: #ffffff !important;
+  fill: #ffffff !important;
+  background: transparent !important;
+  text-shadow: 0 2px 4px #0F91C9 !important;
+}
+.navbar--light .navbar-profile:hover,
+.navbar--light .navbar-logout:hover,
+.navbar--light .navbar-token:hover {
+  background: rgba(11, 145, 201, 0.10) !important;
+  color: #fff !important;
+  fill: #fff !important;
+}

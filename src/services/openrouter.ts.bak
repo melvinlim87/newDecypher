@@ -1,0 +1,320 @@
+// Market Analysis API Key
+const isDevelopment = import.meta.env.MODE === 'development';
+const MARKET_ANALYSIS_API_KEY = isDevelopment 
+  ? import.meta.env.VITE_OPENROUTER_API_KEY_LOCAL || import.meta.env.VITE_OPENROUTER_API_KEY
+  : import.meta.env.VITE_OPENROUTER_API_KEY;
+
+const ANALYSIS_COST = 10;
+
+export const AVAILABLE_MODELS = [
+  { id: 'mistralai/mistral-medium', name: 'GPT-4o Mini', description: 'Advanced market analysis' },
+  { id: 'qwen/qwen-72b', name: 'Qwen ql 72b', description: 'Precise chart analysis' },
+  { id: 'google/gemini-pro', name: 'Gemini Pro', description: 'Fast market insights' }
+] as const;
+
+export type ModelId = typeof AVAILABLE_MODELS[number]['id'];
+import { auth, database } from '../lib/firebase';
+import { ref, get, set, push } from 'firebase/database';
+import { getAuthHeader } from '../utils/auth';
+import { fetchWithRetry } from '../utils/api';
+
+const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5174';
+
+export async function analyzeImage(imageUrl: string, modelId: ModelId): Promise<string> {
+  // Check if user is authenticated
+  if (!auth.currentUser) {
+    throw new Error('You must be logged in to analyze charts');
+  }
+
+  // Check tokens
+  const uid = auth.currentUser.uid;
+  const userRef = ref(database, `users/${uid}`);
+  
+  try {
+    const snapshot = await get(userRef);
+    if (!snapshot.exists()) {
+      throw new Error('User data not found');
+    }
+
+    const userData = snapshot.val();
+    const currentTokens = typeof userData.tokens === 'number' ? userData.tokens : 0;
+
+    if (currentTokens < ANALYSIS_COST) {
+      throw new Error(`Insufficient tokens. You need ${ANALYSIS_COST} tokens to analyze a chart.`);
+    }
+  } catch (error) {
+    if (error instanceof Error) {
+      throw error;
+    }
+    throw new Error('Failed to process tokens');
+  }
+
+  try {
+    // For blob URLs, we need to convert to base64
+    const imageResponse = await fetch(imageUrl);
+    if (!imageResponse.ok) {
+      throw new Error('Failed to load image. Please try again with a different image.');
+    }
+    
+    const blob = await imageResponse.blob();
+    if (blob.size === 0) {
+      throw new Error('The image appears to be empty. Please try a different image.');
+    }
+
+    const imageData = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Data = reader.result as string;
+        if (base64Data && base64Data.startsWith('data:image/')) {
+          resolve(base64Data);
+        } else {
+          reject(new Error('Invalid image format'));
+        }
+      };
+      reader.onerror = () => reject(new Error('Failed to read image file'));
+      reader.readAsDataURL(blob);
+    });
+
+    // Add timeout to fetch request
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout
+
+    const systemPrompt = `You are an expert financial chart analyst. Your primary task is to accurately identify the trading pair and timeframe from the chart image.
+
+CRITICAL - FIRST STEP:
+Look at the chart image. Your first task is to identify and report ONLY these two pieces of information:
+
+1. Symbol/Trading Pair:
+[ONLY write the exact trading pair visible in the chart's title or header. Do not guess or make assumptions.]
+
+2. Timeframe:
+[ONLY write the exact timeframe visible in the chart's settings or header. Do not guess or make assumptions.]
+
+STRICT RULES:
+- Write ONLY what you can clearly see in the chart image
+- Do not use placeholders or examples
+- Do not make assumptions about what the chart might be
+- If you cannot see either value clearly, write "Not Visible"
+- Do not write any explanatory text around these values
+- Do not try to guess the values based on chart patterns or price movements
+
+After reporting these two values, then proceed with your technical analysis:
+
+📊 MARKET CONTEXT
+• Current Price: [exact number if visible]
+• Market Structure: [clear definition]
+• Volatility: [quantified]
+
+🤖 **AI ANALYSIS**
+
+Symbol: [Exact trading pair]
+Timeframe: [Specific format: M1/M5/M15/H1/H4/D1/W1]
+
+📊 **MARKET SUMMARY**
+Current Price: [Exact number]
+Support Levels: [Specific numbers]
+Resistance Levels: [Specific numbers]
+Market Structure: [Clear trend definition]
+Volatility: [Quantified condition]
+
+📈 **TECHNICAL ANALYSIS**
+Price Movement: [Detailed analysis including:]
+- Exact price range and direction
+- Specific chart patterns
+- Key breakout/breakdown levels
+- Volume confirmation
+- Trend strength assessment
+- Market structure analysis
+
+**TECHNICAL INDICATORS**
+[Only include visible indicators]
+
+🎯 *RSI INDICATOR*
+Current Values: [Exact numbers]
+Signal: [Clear direction]
+Analysis: [Detailed interpretation]
+- Price correlation
+- Historical context
+- Divergence signals
+
+📊 *MACD INDICATOR*
+Current Values: [Exact numbers]
+Signal: [Clear direction]
+Analysis: [Detailed interpretation]
+- Momentum strength
+- Trend confirmation
+- Signal reliability
+
+💡 **TRADING SIGNAL**
+Action: [BUY/SELL/HOLD]
+Entry Price: [Exact level if BUY/SELL]
+Stop Loss: [Specific price]
+Take Profit: [Specific target]
+
+Signal Reasoning:
+- Technical justification
+- Multiple timeframe context
+- Risk/reward analysis
+- Market structure alignment
+- Volume confirmation
+
+Risk Assessment:
+- Position size calculation
+- Volatility consideration
+- Invalidation scenarios
+- Key risk levels
+Confidence Level: [Only for BUY/SELL]`;
+
+    // Prepare system message and user message
+    const messages = [
+      {
+        role: 'system',
+        content: systemPrompt
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'text', text: 'Please analyze this market chart and provide a comprehensive trading strategy analysis. Focus on price action, technical indicators, and potential trading opportunities. If any indicator is not clearly visible, mark it as "Not Visible".' },
+          { type: 'image_url', image_url: { url: imageData } }
+        ]
+      }
+    ];
+
+    const body = {
+      model: modelId,
+      max_tokens: 4000,
+      temperature: 0.7,
+      messages
+    };
+
+    const headers = {
+      'Authorization': await getAuthHeader(MARKET_ANALYSIS_API_KEY),
+      'Content-Type': 'application/json',
+      'Referer': SITE_URL,
+      'HTTP-Referer': SITE_URL,
+      'X-Title': 'AI Market Analyst'
+    };
+
+    const apiResponse = await fetchWithRetry('https://openrouter.ai/api/v1/chat/completions', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify(body),
+      signal: controller.signal
+    });
+
+    clearTimeout(timeoutId);
+
+    if (!apiResponse.ok) {
+      const errorData = await apiResponse.json();
+      console.error('API Error:', {
+        status: `${apiResponse.status} (${apiResponse.statusText})`,
+        statusText: apiResponse.statusText,
+        headers: Object.fromEntries(apiResponse.headers.entries()),
+        error: errorData
+      });
+      throw new Error(`API error: ${errorData.error?.message || 'Unknown error'}`);
+    }
+
+    const data = await apiResponse.json();
+    if (!data?.choices?.[0]?.message?.content) {
+      throw new Error(
+        'Failed to analyze chart. Please ensure:\n\n' +
+        '1. The chart image is clear and readable\n' +
+        '2. Technical indicators are visible\n' +
+        '3. The selected model supports image analysis'
+      );
+    }
+
+    const content = data.choices[0].message.content;
+    
+    // Ensure the response has the required sections
+    const requiredSections = [
+      'MARKET SUMMARY',
+      'TECHNICAL ANALYSIS',
+      'TECHNICAL INDICATORS',
+      'TRADING SIGNAL'
+    ];
+
+    const missingSections = requiredSections.filter(section => 
+      !content.includes(section)
+    );
+
+    if (missingSections.length > 0) {
+      throw new Error(
+        `The analysis is missing required sections: ${missingSections.join(', ')}. ` +
+        'Please try again with a different model or ensure the chart image is clear.'
+      );
+    }
+
+    // Save analysis to history
+    try {
+      const historyRef = ref(database, `users/${auth.currentUser.uid}/history`);
+      await push(historyRef, {
+        type: 'market-analysis',
+        content: data.choices[0].message.content,
+        timestamp: new Date().toISOString(),
+        model: AVAILABLE_MODELS.find(m => m.id === modelId)?.name
+      });
+    } catch (error) {
+      // Don't throw here - analysis was successful
+    }
+
+    // Deduct tokens only after successful analysis
+    try {
+      const snapshot = await get(userRef);
+      if (!snapshot.exists()) {
+        throw new Error('User data not found');
+      }
+
+      const userData = snapshot.val();
+      const currentTokens = typeof userData.tokens === 'number' ? userData.tokens : 0;
+
+      // Update tokens
+      await set(userRef, {
+        ...userData,
+        tokens: currentTokens - ANALYSIS_COST,
+        updatedAt: new Date().toISOString()
+      });
+    } catch (error) {
+      // Don't throw here - analysis was successful, just log the error
+    }
+
+    return data.choices[0].message.content;
+  } catch (error) {
+    console.error('Analysis error:', {
+      message: error instanceof Error ? error.message : 'Unknown error',
+      details: error
+    });
+
+    // Handle specific error cases
+    if (error instanceof Error) {
+      if (error.message.includes('Failed to fetch')) {
+        throw new Error(
+          'Network error. Please check your internet connection and try again.\n\n' +
+          'Troubleshooting steps:\n' +
+          '1. Check your internet connection\n' +
+          '2. Refresh the page\n' +
+          '3. Try a different browser'
+        );
+      }
+      
+      if (error.message.includes('insufficient_quota') || error.message.includes('token')) {
+        throw new Error(
+          'Insufficient tokens. Please purchase more tokens to continue analyzing charts.'
+        );
+      }
+
+      throw new Error(
+        'Analysis failed. Please ensure:\n\n' +
+        '1. The image is a valid chart screenshot\n' +
+        '2. The chart shows clear price action\n' +
+        '3. Technical indicators are visible\n\n' +
+        'Try using a different model or uploading a clearer image.'
+      );
+    }
+
+    throw new Error(
+      'An unexpected error occurred. Please try again or contact support if the issue persists.'
+    );
+  }
+}

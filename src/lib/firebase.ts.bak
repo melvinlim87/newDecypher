@@ -1,0 +1,288 @@
+import { initializeApp } from 'firebase/app';
+import { getAuth } from 'firebase/auth';
+import { getDatabase } from 'firebase/database';
+import { getStorage } from 'firebase/storage';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAlWSNcqOYJRrttlL2cYNUvZaMoCc5F2j4",
+  authDomain: "ai-crm-windsurf.firebaseapp.com",
+  databaseURL: "https://ai-crm-windsurf-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ai-crm-windsurf",
+  storageBucket: "ai-crm-windsurf.firebasestorage.app",
+  messagingSenderId: "473319817958",
+  appId: "1:473319817958:web:7e6e03b8419ac16f8b7127"
+};
+
+const app = initializeApp(firebaseConfig);
+export const auth = getAuth(app);
+export const database = getDatabase(app);
+export const storage = getStorage(app);
+
+// Helper function to save EA generator conversation history
+export const saveEAHistory = async (userId: string, data: {
+  messages: Array<{role: string; content: string; image?: string}>;
+  timestamp: number;
+  title?: string;
+  historyId?: string | null;
+}) => {
+  console.log('saveEAHistory called with:', {
+    userId,
+    messageCount: data.messages.length,
+    historyId: data.historyId,
+    title: data.title,
+    timestamp: new Date(data.timestamp).toISOString()
+  });
+
+  if (!userId) return;
+  if (!data.messages || data.messages.length === 0) {
+    console.log('No messages provided, skipping save');
+    return;
+  }
+
+  const { ref, set, push, get } = await import('firebase/database');
+
+  // If we have a history ID, update existing conversation
+  if (data.historyId) {
+    const historyRef = ref(database, `users/${userId}/history/${data.historyId}`);
+    console.log('Updating existing EA history:', {
+      path: `users/${userId}/history/${data.historyId}`,
+      messageCount: data.messages.length,
+      lastMessage: {
+        role: data.messages[data.messages.length - 1].role,
+        contentLength: data.messages[data.messages.length - 1].content.length
+      }
+    });
+
+    // Clean messages array by removing undefined image properties
+    const cleanMessages = data.messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      ...(msg.image ? { image: msg.image } : {})
+    }));
+
+    await set(historyRef, {
+      type: 'ea-generator',
+      title: data.title,
+      messages: cleanMessages, // Keep all messages in the array but cleaned
+      content: data.messages[data.messages.length - 1].content, // Store latest message as content
+      timestamp: data.timestamp,
+      id: data.historyId
+    });
+
+    console.log('Successfully updated existing history:', data.historyId);
+    return data.historyId;
+  } else {
+    // Create new conversation
+    const title = data.title || (
+      data.messages[0].content.length > 50 
+        ? `EA Generator - ${data.messages[0].content.substring(0, 50)}...`
+        : `EA Generator - ${data.messages[0].content}`
+    );
+
+    const eaHistoryRef = push(ref(database, `users/${userId}/history`));
+    console.log('Creating new EA history:', {
+      path: `users/${userId}/history/${eaHistoryRef.key}`,
+      messageCount: data.messages.length,
+      title,
+      firstMessage: {
+        role: data.messages[0].role,
+        contentLength: data.messages[0].content.length
+      },
+      lastMessage: {
+        role: data.messages[data.messages.length - 1].role,
+        contentLength: data.messages[data.messages.length - 1].content.length
+      }
+    });
+
+    // Clean messages array by removing undefined image properties
+    const cleanMessages = data.messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      ...(msg.image ? { image: msg.image } : {})
+    }));
+
+    await set(eaHistoryRef, {
+      type: 'ea-generator',
+      title: title,
+      messages: cleanMessages, // Keep all messages in the array but cleaned
+      content: data.messages[data.messages.length - 1].content, // Store latest message as content
+      timestamp: data.timestamp,
+      id: eaHistoryRef.key
+    });
+  
+    console.log('Successfully created new history:', eaHistoryRef.key);
+    return eaHistoryRef.key;
+  }
+};
+
+// Helper function to save chat analysis data
+export const saveChatAnalysis = async (userId: string, data: {
+  analysis: string | null;
+  messages?: Array<{role: string; content: string; image?: string}>;
+  timeframe: string | null;
+  chartUrls: string[];
+  timestamp: number;
+}): Promise<string | null> => {
+  if (!userId) return null;
+
+  const { ref, push, set } = await import('firebase/database');
+  const analysisRef = push(ref(database, `users/${userId}/history`));
+
+  try {
+    await set(analysisRef, {
+      type: 'market-analysis',
+      title: data.timeframe ? `Market Analysis - ${data.timeframe}` : 'Market Analysis',
+      content: data.analysis,
+      chartUrls: data.chartUrls,
+      messages: data.messages || [],
+      timestamp: data.timestamp,
+      id: analysisRef.key
+    });
+    console.log('Data saved successfully:', analysisRef.key);
+    return analysisRef.key;
+  } catch (error) {
+    console.error('Error saving analysis to Firebase:', error);
+    return null;
+  }
+};
+
+// Helper function to upload chart image
+export const uploadChartImage = async (userId: string, imageBlob: Blob): Promise<string> => {
+  if (!userId) throw new Error('User ID is required');
+  console.log('Starting uploadChartImage:', { 
+    userId, 
+    blobSize: imageBlob.size, 
+    blobType: imageBlob.type,
+    storageBucket: storage.app.options.storageBucket 
+  });
+
+  try {
+    const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+    console.log('Firebase storage modules imported');
+    
+    // Create a unique filename with timestamp and random string
+    const timestamp = Date.now();
+    const randomString = Math.random().toString(36).substring(2, 15);
+    const filename = `${timestamp}-${randomString}.png`;
+    console.log('Generated filename:', filename);
+    
+    // Store in user-specific folder
+    const imageRef = ref(storage, `users/${userId}/charts/${filename}`);
+    console.log('Created storage reference:', {
+      fullPath: imageRef.fullPath,
+      bucket: imageRef.bucket,
+      name: imageRef.name
+    });
+    
+    // Upload the image
+    console.log('Starting upload to Firebase Storage...');
+    const snapshot = await uploadBytes(imageRef, imageBlob);
+    console.log('Upload completed:', {
+      bytesTransferred: snapshot.bytesTransferred,
+      totalBytes: snapshot.totalBytes,
+      fullPath: snapshot.ref.fullPath,
+      metadata: snapshot.metadata
+    });
+    
+    // Get the HTTPS download URL
+    console.log('Getting download URL...');
+    const httpsUrl = await getDownloadURL(imageRef);
+    console.log('Got download URL:', httpsUrl.substring(0, 50) + '...');
+    
+    return httpsUrl;
+  } catch (error) {
+    console.error('Error in uploadChartImage:', error);
+    throw error instanceof Error ? error : new Error('Failed to upload chart image');
+  }
+};
+
+// Helper function to convert gs:// URL to HTTPS URL
+export const getHttpsUrl = async (gsUrl: string): Promise<string> => {
+  if (!gsUrl.startsWith('gs://')) return gsUrl;
+  
+  const { ref, getDownloadURL } = await import('firebase/storage');
+  const gsPath = gsUrl.replace('gs://', '');
+  const [bucket, ...pathParts] = gsPath.split('/');
+  const path = pathParts.join('/');
+  
+  const imageRef = ref(storage, path);
+  return getDownloadURL(imageRef);
+};
+
+// Helper function to get user's analyses
+export const getUserAnalyses = async (userId: string) => {
+  if (!userId) return [];
+
+  const { ref, get } = await import('firebase/database');
+  const historyRef = ref(database, `users/${userId}/history`);
+  
+  try {
+    const snapshot = await get(historyRef);
+    if (!snapshot.exists()) return [];
+
+    return Object.entries(snapshot.val()).map(([key, value]: [string, any]) => ({
+      id: key,
+      ...value
+    }));
+  } catch (error) {
+    console.error('Error getting analyses:', error);
+    return [];
+  }
+};
+
+// Helper function to delete chart images
+export const deleteChartImages = async (userId: string, chartUrls?: string[]) => {
+  if (!userId || !chartUrls || !Array.isArray(chartUrls) || chartUrls.length === 0) {
+    return;
+  }
+
+  const { ref, deleteObject } = await import('firebase/storage');
+  
+  // Delete each chart image
+  const deletePromises = chartUrls.map(async (url) => {
+    try {
+      // Extract the path from the URL
+      const path = decodeURIComponent(url.split('/o/')[1].split('?')[0]);
+      const imageRef = ref(storage, path);
+      await deleteObject(imageRef);
+    } catch (error) {
+      console.error('Error deleting image:', error);
+    }
+  });
+
+  await Promise.all(deletePromises);
+};
+
+// Helper function to delete analysis data
+export const deleteAnalysis = async (userId: string, analysisId: string, chartUrls?: string[]) => {
+  if (!userId || !analysisId) return;
+
+  const { ref, remove, get } = await import('firebase/database');
+  
+  // Delete the analysis data
+  const analysisRef = ref(database, `users/${userId}/history/${analysisId}`);
+  
+  // If chartUrls is not provided, try to get them from the database
+  if (!chartUrls) {
+    try {
+      const snapshot = await get(analysisRef);
+      if (snapshot.exists()) {
+        const data = snapshot.val();
+        chartUrls = data.chartUrls || [];
+      } else {
+        chartUrls = [];
+      }
+    } catch (error) {
+      console.error('Error fetching analysis data:', error);
+      chartUrls = [];
+    }
+  }
+  
+  // Delete the analysis data
+  await remove(analysisRef);
+  
+  // Delete associated chart images if they exist
+  if (chartUrls && chartUrls.length > 0) {
+    await deleteChartImages(userId, chartUrls);
+  }
+};

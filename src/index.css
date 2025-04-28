@@ -1,0 +1,485 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Global background style for all pages */
+body {
+  background:
+    linear-gradient(135deg, rgba(226, 232, 240, 0.01) 0%, rgba(203, 213, 225, 0.005) 100%),
+    radial-gradient(circle at 50% 0%, rgba(226, 232, 240, 0.01) 0%, transparent 75%),
+    radial-gradient(circle at 0% 50%, rgba(203, 213, 225, 0.005) 0%, transparent 50%),
+    radial-gradient(circle at 100% 50%, rgba(203, 213, 225, 0.005) 0%, transparent 50%),
+    linear-gradient(to bottom,
+      rgba(24, 24, 27, 0.98) 0%,
+      rgba(39, 39, 42, 0.95) 50%,
+      rgba(24, 24, 27, 0.98) 100%
+    ) !important;
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  position: relative;
+  overflow-x: hidden;
+}
+
+/* Global card styling - simplified for better performance */
+.app-card {
+  background: linear-gradient(
+    135deg,
+    rgba(226, 232, 240, 0.02) 0%,
+    rgba(203, 213, 225, 0.03) 25%,
+    rgba(226, 232, 240, 0.02) 50%,
+    rgba(203, 213, 225, 0.03) 75%,
+    rgba(226, 232, 240, 0.02) 100%
+  ) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: 0 8px 32px rgba(203, 213, 225, 0.05), inset 0 0 0 1px rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(5px) !important;
+  border-radius: 0.5rem !important;
+}
+
+/* Global button styling */
+.app-button {
+  background: linear-gradient(90deg, rgba(79, 70, 229, 0.2) 0%, rgba(99, 102, 241, 0.2) 100%);
+  box-shadow: 0 0 15px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.app-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
+}
+
+.app-button-secondary {
+  background: rgba(31, 41, 55, 0.4);
+  box-shadow: 0 0 15px rgba(31, 41, 55, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  font-weight: bold;
+  transition: all 0.2s ease-in-out;
+}
+
+.app-button-secondary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 20px rgba(31, 41, 55, 0.5);
+}
+
+/* Global input styling */
+.app-input {
+  background: rgba(31, 41, 55, 0.5) !important;
+  border: 1px solid rgba(255, 255, 255, 0.05) !important;
+  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.2) !important;
+  color: white !important;
+  caret-color: #00A9E0 !important;
+}
+
+/* Input placeholder styling */
+.app-input::placeholder {
+  color: rgba(255, 255, 255, 0.7) !important;
+  opacity: 1 !important;
+  text-shadow: none !important;
+}
+
+/* Global text styling */
+.app-text {
+  color: #ffffff !important;
+  text-shadow: 0 0 5px rgba(0, 133, 215, 0.3) !important;
+}
+
+/* Global icon styling */
+.app-icon {
+  color: #00A9E0 !important;
+  filter: drop-shadow(0 0 5px rgba(0, 133, 215, 0.3)) !important;
+}
+
+/* Hide scrollbar but maintain functionality */
+.scrollbar-hide {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari and Opera */
+}
+
+/* Sidebar connected to navbar */
+.sidebar-connected {
+  border-top: none !important;
+  margin-top: -1px;
+  box-shadow: 0 -1px 0 rgba(0, 133, 215, 0.3);
+}
+
+/* Custom Navbar Styles */
+.metallic-gradient {
+  background: rgba(24, 24, 27, 0.95);
+  box-shadow: 0 0 20px rgba(0, 133, 215, 0.3);
+}
+
+.metallic-border {
+  position: relative;
+}
+
+.metallic-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: linear-gradient(45deg, rgba(0, 133, 215, 0.5) 0%, rgba(0, 169, 224, 0.5) 100%);
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 10;
+}
+
+.metallic-glow {
+  box-shadow: 
+    0 0 20px rgba(0, 133, 215, 0.3),
+    0 0 40px rgba(0, 133, 215, 0.1),
+    inset 0 0 10px rgba(0, 133, 215, 0.2);
+}
+
+.nav-link-hover {
+  transition: all 0.3s ease;
+}
+
+.nav-link-hover:hover {
+  box-shadow: 
+    0 0 15px rgba(0, 133, 215, 0.3),
+    inset 0 0 10px rgba(0, 133, 215, 0.2);
+  background: rgba(39, 39, 42, 0.8);
+}
+
+/* Custom Metallic Gradients */
+@layer utilities {
+  .metallic-gradient {
+    background: rgba(24, 24, 27, 0.95);
+    box-shadow: 0 0 20px rgba(0, 133, 215, 0.3);
+  }
+
+  .metallic-border {
+    position: relative;
+  }
+
+  .metallic-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: inherit;
+    padding: 1px;
+    background: linear-gradient(45deg, rgba(0, 133, 215, 0.5) 0%, rgba(0, 169, 224, 0.5) 100%);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    z-index: 10;
+  }
+
+  .nav-glow {
+    box-shadow: 
+      0 0 20px rgba(0, 133, 215, 0.3),
+      0 0 40px rgba(0, 133, 215, 0.1),
+      inset 0 0 10px rgba(0, 133, 215, 0.2);
+  }
+
+  .nav-link-hover {
+    transition: all 0.3s ease;
+  }
+
+  .nav-link-hover:hover {
+    box-shadow: 
+      0 0 15px rgba(0, 133, 215, 0.3),
+      inset 0 0 10px rgba(0, 133, 215, 0.2);
+    background: rgba(39, 39, 42, 0.8);
+  }
+
+  .blue-glow {
+    box-shadow: 
+      0 0 15px rgba(0, 133, 215, 0.6),
+      0 0 25px rgba(0, 133, 215, 0.4),
+      inset 0 0 10px rgba(0, 133, 215, 0.3);
+  }
+
+  @keyframes borderGlow {
+    0%, 100% {
+      opacity: 0.8;
+      box-shadow: 
+        0 0 20px rgba(255, 255, 255, 0.9),
+        0 0 40px rgba(255, 255, 255, 0.8),
+        0 0 60px rgba(255, 255, 255, 0.6),
+        inset 0 0 30px rgba(255, 255, 255, 0.8);
+    }
+    50% {
+      opacity: 1;
+      box-shadow: 
+        0 0 30px rgba(255, 255, 255, 1),
+        0 0 60px rgba(255, 255, 255, 0.9),
+        0 0 90px rgba(255, 255, 255, 0.7),
+        inset 0 0 40px rgba(255, 255, 255, 0.9);
+    }
+  }
+}
+
+@keyframes modalPopIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  70% {
+    transform: scale(1.02);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalBackdropFadeIn {
+  0% {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    backdrop-filter: blur(20px);
+  }
+}
+
+@layer base {
+  html, body, #root {
+    @apply text-white;
+    background: #18181b !important;
+    min-height: 100vh;
+    width: 100vw !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    position: relative;
+    overflow-x: hidden;
+  }
+  
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background:
+      url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E"),
+      linear-gradient(45deg, rgba(203, 213, 225, 0.01) 25%, transparent 25%);
+    background-size: 150px 150px, 60px 60px;
+    opacity: 0.02;
+    z-index: -1;
+    pointer-events: none;
+  }
+
+  html {
+    @apply overflow-x-hidden;
+    height: 100vh;
+  }
+}
+
+@layer components {
+  .icon-float {
+    @apply transition-all duration-300;
+    animation: floating 6s ease-in-out infinite;
+  }
+  
+  .icon-pulse {
+    animation: iconPulse 2s ease-in-out infinite;
+  }
+  
+  .icon-slide {
+    animation: slideHorizontal 3s ease-in-out infinite;
+  }
+  
+  .icon-rotate {
+    animation: rotateGauge 4s ease-in-out infinite;
+  }
+  
+  .icon-scale {
+    animation: scaleTarget 2s ease-in-out infinite;
+  }
+  
+  .fade-in {
+    @apply animate-[fadeIn_0.5s_ease-in-out];
+  }
+  
+  .slide-up {
+    @apply animate-[slideUp_0.5s_ease-out];
+  }
+  
+  .modal-backdrop {
+    @apply animate-[modalBackdropFadeIn_0.2s_ease-out_forwards];
+  }
+  
+  .modal-content {
+    @apply animate-[modalPopIn_0.3s_cubic-bezier(0.34,1.56,0.64,1)_forwards];
+  }
+  
+  .dropdown-content {
+    @apply animate-[dropdownFadeIn_0.2s_ease-out_forwards];
+  }
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes floating {
+  0% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  50% {
+    transform: translateY(-10px) rotate(10deg) scale(1.1);
+  }
+  100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(56, 189, 248, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(56, 189, 248, 0);
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+@keyframes iconPulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+}
+
+@keyframes slideHorizontal {
+  0%, 100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(4px);
+  }
+}
+
+@keyframes rotateGauge {
+  0% {
+    transform: rotate(-20deg);
+  }
+  50% {
+    transform: rotate(20deg);
+  }
+  100% {
+    transform: rotate(-20deg);
+  }
+}
+
+@keyframes scaleTarget {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.15);
+  }
+}
+
+/* Circuit Animation */
+@keyframes circuitFlow {
+  0% {
+    background-position: 0px 100px;
+    opacity: 0.4;
+  }
+  50% {
+    background-position: 50px -100px;
+    opacity: 0.6;
+  }
+  100% {
+    background-position: 0px 100px;
+    opacity: 0.4;
+  }
+}
+
+/* Circuit Pulse Animation */
+@keyframes circuitPulse {
+  0% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.2);
+  }
+  100% {
+    opacity: 0.2;
+    transform: scale(1);
+  }
+}
+
+/* Circuit Line Glow */
+@keyframes lineGlow {
+  0%, 100% {
+    filter: drop-shadow(0 0 2px rgba(0, 229, 255, 0.5));
+  }
+  50% {
+    filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.8));
+  }
+}
+
+@keyframes gradientAnimation {
+  0% {
+    background-position: 0% 0%;
+    opacity: 0.5;
+  }
+  50% {
+    background-position: 100% 50%;
+    opacity: 0.7;
+  }
+  100% {
+    background-position: 0% 0%;
+    opacity: 0.5;
+  }
+}
+
+@keyframes gradientShift {
+  0%, 100% {
+    background-position: 0% 0%;
+    background-size: 120% 120%;
+  }
+  50% {
+    background-position: 100% 100%;
+    background-size: 140% 140%;
+  }
+}
