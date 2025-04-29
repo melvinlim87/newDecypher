@@ -315,7 +315,40 @@
 }
 
 /* Light theme variants */
-:global(.light) .analysisOutput {
+:global(.light) .ai-chat-page-container {
+  background: #18181b !important;
+  color: #ffffff !important;
+  min-height: calc(100vh - 4rem) !important;
+  width: 100% !important;
+  margin: 0 auto;
+  overflow-y: auto !important;
+  transition: padding-left 0.3s ease-in-out !important;
+  padding-bottom: 2rem !important;
+  position: relative !important;
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 1024px) {
+  .ai-chat-page-container {
+    flex-direction: row;
+    align-items: flex-start;
+    gap: 2rem;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (max-width: 1023px) {
+  .ai-chat-page-container {
+    flex-direction: column;
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+    gap: 1rem;
+  }
+}
+
+.analysisOutput {
   background: linear-gradient(135deg, rgba(24, 24, 27, 0.95), rgba(24, 24, 27, 0.95));
   border: 1px solid rgba(0, 133, 215, 0.3);
   box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 0 15px rgba(0, 133, 215, 0.3);

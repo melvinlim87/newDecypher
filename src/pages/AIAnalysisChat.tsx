@@ -2026,25 +2026,27 @@ function AIAnalysisChat() {
 
   // Main render
   return (
-    <div className={`ai-chat-page min-h-screen w-full flex flex-col text-white silver-theme-container ${theme} silver-theme ${!isCollapsed ? 'sidebar-expanded' : 'sidebar-collapsed'}`} style={{ 
-      background: 'linear-gradient(180deg, #333333 0%, #18181b 100%) !important',
-      width: '100vw',
-      margin: 0,
-      padding: 0,
-            <div className="relative w-10 h-10 silver-card metallic-border metallic-glow">
-              <div className="absolute inset-2 flex items-center justify-center">
-                <Code2 className="w-6 h-6" />
-              </div>
-              <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-20 rounded-full animate-pulse"></div>
-            </div>
-            <h1 className="text-3xl font-bold silver-text">
-              AI Analysis
-            </h1>
-          </div>
+    <div
+      className={`ai-chat-page-container ai-chat-page min-h-screen w-full flex flex-col text-white silver-theme-container ${theme} silver-theme ${!isCollapsed ? 'sidebar-expanded' : 'sidebar-collapsed'}`}
+
+      style={{
+        background: 'linear-gradient(180deg, #333333 0%, #18181b 100%) !important',
+        width: '100vw',
+        margin: 0,
+        padding: 0,
+      }}
+    >
+      <div className="relative w-10 h-10 silver-card metallic-border metallic-glow mt-8 ml-8">
+        <div className="absolute inset-2 flex items-center justify-center">
+          <Code2 className="w-6 h-6" />
         </div>
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-20 rounded-full animate-pulse"></div>
       </div>
+      <h1 className="text-3xl font-bold silver-text ml-8 mt-2">
+        AI Analysis
+      </h1>
       {/* Global dot pattern overlay for entire page */}
-      <div className="fixed inset-0 z-0" style={{ 
+      <div className="fixed inset-0 z-0" style={{
         backgroundImage: 'radial-gradient(rgba(0, 229, 255, 0.15) 2px, transparent 2px)',
         backgroundSize: '30px 30px',
         opacity: 0.3,

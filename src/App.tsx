@@ -11,7 +11,7 @@ import { EAHistory } from './pages/EAHistory';
 import { Profile } from './pages/Profile';
 import { PurchaseHistory } from './pages/PurchaseHistory';
 import { ChartImg } from './pages/ChartImg';
-import AIAnalysisChat from "./pages/AIAnalysisChat.simple";
+import AIAnalysisChat from "./pages/AIAnalysisChat";
 import { MarketPage } from './pages/MarketPage';
 import { Layout } from './components/Layout';
 import { AuthGuard as ProtectedRoute } from './components/AuthGuard';
