@@ -72,29 +72,16 @@ const ConfidenceBar = ({ percentage, showLabel = true }: { percentage: number, s
     <div className="mt-2 w-full">
       <div className="flex items-center gap-2">
         <div 
-          className="flex-1 rounded-full h-2.5 overflow-hidden" 
-          style={{
-            backgroundColor: theme === 'dark' ? 'rgba(17, 34, 64, 0.8)' : 'rgba(17, 34, 64, 0.8)',
-            border: '1px solid rgba(0, 229, 255, 0.3)',
-            boxShadow: '0 0 5px rgba(0, 229, 255, 0.2)',
-          }}
+          className={`flex-1 rounded-full h-2.5 overflow-hidden ${styles.progressBarBg}`}
         >
           <div 
-            className="h-full rounded-full transition-all duration-500"
-            style={{ 
-              width: `${percentage}%`,
-              ...getColorStyle(percentage)
-            }}
+            className={`h-full rounded-full transition-all duration-500 ${styles.progressBarFill}`}
+            style={{ width: `${percentage}%`, ...getColorStyle(percentage) }}
           />
         </div>
         {showLabel && (
           <span 
-            className="text-sm font-medium min-w-[3rem]"
-            style={{
-              color: theme === 'dark' ? '#00E5FF' : '#00E5FF',
-              textShadow: '0 0 5px rgba(0, 229, 255, 0.5)',
-              fontWeight: 'bold'
-            }}
+            className={`text-sm font-medium min-w-[3rem] ${styles.progressLabel}`}
           >
             {percentage}%
           </span>
@@ -2112,16 +2099,38 @@ function AIAnalysisChat() {
                           // Remove redundant unknowns
                           .replace(/^Symbol: Unknown\s*\n?/i, '')
                           .replace(/^Timeframe: Unknown\s*\n?/i, '')
-                          // Standardize Timeframe formatting
-                          .replace(/Timeframe:\s*\*\*(.*?)\*\*/i, '**Timeframe:** $1')
-                          .replace(/Timeframe:\s*/i, '**Timeframe:** ')
-                          // Standardize Symbol/Trading Pair formatting
-                          .replace(/Symbol\/Trading Pair:\s*/i, '**Symbol/Trading Pair:** ')
-                          // Add spacing after colons if missing
-                          .replace(/:\s*(\S)/g, ': $1')
-                          // Add line breaks for clarity after Timeframe and Symbol
+                          // Remove 'CRITICAL INFORMATION' or demote to plain text
+                          .replace(/^CRITICAL INFORMATION.*\n?/i, '')
+                          // Remove lines that are just '**', empty, or contain only Markdown artifacts
+                          .replace(/^(\s*\*+\s*)$/gm, '') // lines with only asterisks and whitespace
+                          .replace(/^(\s*)$/gm, '') // empty lines
+                          .replace(/^(\s*[\*\_\-]+\s*)$/gm, '') // lines with only Markdown artifacts
+                          // Standardize Timeframe formatting, only label bold
+                          .replace(/\*\*Timeframe:?\*\*\s*\*\*(.*?)\*\*/i, '**Timeframe:** $1')
+                          .replace(/\*\*Timeframe:?\*\*\s*/i, '**Timeframe:** ')
+                          .replace(/Timeframe:?\s*\*\*(.*?)\*\*/i, '**Timeframe:** $1')
+                          .replace(/Timeframe:?\s*/i, '**Timeframe:** ')
+                          // Standardize Symbol/Trading Pair formatting, only label bold
+                          .replace(/\*\*Symbol\/Trading Pair:?\*\*\s*\*\*(.*?)\*\*/i, '**Symbol/Trading Pair:** $1')
+                          .replace(/\*\*Symbol\/Trading Pair:?\*\*\s*/i, '**Symbol/Trading Pair:** ')
+                          .replace(/Symbol\/Trading Pair:?\s*\*\*(.*?)\*\*/i, '**Symbol/Trading Pair:** $1')
+                          .replace(/Symbol\/Trading Pair:?\s*/i, '**Symbol/Trading Pair:** ')
+                          // Remove extra asterisks at start of lines
+                          .replace(/^\*+\s*/gm, '')
+                          // Remove lines that are only whitespace or asterisks
+                          .replace(/^\s*\n/gm, '')
+                          // Add horizontal rules before major sections, but not before icons or empty lines
+                          .replace(/\n*---\n*/g, '\n---\n')
+                          .replace(/\n*---\n*(\s*\n)*(?=\s*([\u{1F300}-\u{1F6FF}]|MARKET CONTEXT|TECHNICAL ANALYSIS|TECHNICAL INDICATORS))/gu, '\n---\n\n')
+                          .replace(/(MARKET CONTEXT)/, '\n---\n\n$1')
+                          .replace(/(TECHNICAL ANALYSIS)/, '\n---\n\n$1')
+                          .replace(/(TECHNICAL INDICATORS)/, '\n---\n\n$1')
+                          // Add extra spacing after Timeframe and Symbol
                           .replace(/(\*\*Timeframe:\*\*.*?\n)/, '$1\n')
                           .replace(/(\*\*Symbol\/Trading Pair:\*\*.*?\n)/, '$1\n')
+                          // Remove multiple blank lines
+                          .replace(/\n{3,}/g, '\n\n')
+                          .trim()
                         : '')}
                   </Markdown>
                 </div>

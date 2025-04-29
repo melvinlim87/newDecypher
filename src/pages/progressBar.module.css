@@ -1,0 +1,15 @@
+.progressBarBg {
+  background-color: rgba(17, 34, 64, 0.8);
+  border: 1px solid rgba(0, 229, 255, 0.3);
+  box-shadow: 0 0 5px rgba(0, 229, 255, 0.2);
+}
+
+.progressBarFill {
+  /* The width and color are set dynamically by React inline style */
+}
+
+.progressLabel {
+  color: #00E5FF;
+  text-shadow: 0 0 5px rgba(0, 229, 255, 0.5);
+  font-weight: bold;
+}
