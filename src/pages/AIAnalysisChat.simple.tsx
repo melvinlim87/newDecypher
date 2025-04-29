@@ -86,7 +86,7 @@ function AIAnalysisChatSimple() {
               <div className="flex flex-wrap md:flex-nowrap gap-1 items-end w-full min-h-[60px] mt-auto p-2 rounded-lg bg-gray-800/50">
                 <textarea
                   placeholder="Type your message..."
-                  value=""
+                  defaultValue=""
                   className="flex-1 p-2 rounded-lg w-full min-w-[200px] resize-none text-sm bg-gray-700/50 text-white"
                   rows={2}
                 />
