@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, AlertCircle, X, Loader2, Send, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
-import { ImageUploader } from '../components/ImageUploader';
-import { ChartGenerator } from '../components/ChartGenerator';
 import { UploadConfirmationModal } from '../components/UploadConfirmationModal';
 import { AVAILABLE_MODELS, analyzeImage, type ModelId, sendChatMessage } from '../services/openrouter';
 import Markdown from 'react-markdown';
 import { useTypingEffect } from '../hooks/useTypingEffect';
-import { formatTimeframe } from '../utils/formatters';
 import { auth, database } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { saveChatAnalysis, uploadChartImage, getUserAnalyses } from '../lib/firebase';
+import { saveChatAnalysis, uploadChartImage } from '../lib/firebase';
 import styles from './AIAnalysisChat.module.css';
 import { useAnalysisContext } from '../context/AnalysisContext';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -17,6 +14,7 @@ import { useTheme } from '../contexts/ThemeContext';
 import { useSidebarState } from '../contexts/SidebarContext';
 import { LowCreditModal } from '../components/LowCreditModal';
 import '../styles/silverTheme.css';
+import '../styles/AIChat.css';
 
 const AnalysisType = {
   Technical: 'Technical',
@@ -981,6 +979,11 @@ function AIAnalysisChat() {
     setShowUploadPrompt(false);
   };
 
+  const handleError = (errorMessage: string) => {
+    console.error(errorMessage);
+    setMessages(prev => [...prev, { role: 'assistant', content: `Error: ${errorMessage}` }]);
+  };
+
   const handleFileDrop = async (event: React.DragEvent<HTMLDivElement>) => {
     event.preventDefault();
     setIsDragging(false);
@@ -1931,10 +1934,7 @@ function AIAnalysisChat() {
         z-index: 20 !important;
       }
       
-      /* New AI chat page styling */
-      .ai-chat-page {
-        padding-top: 60px !important; /* Space for the title */
-      }
+     
       
       /* Header border styling */
       .metallic-border-bottom {
@@ -2027,63 +2027,34 @@ function AIAnalysisChat() {
   // Main render
   return (
     <div
-      className={`ai-chat-page-container ai-chat-page min-h-screen w-full flex flex-col text-white silver-theme-container ${theme} silver-theme ${!isCollapsed ? 'sidebar-expanded' : 'sidebar-collapsed'}`}
-
-      style={{
-        background: 'linear-gradient(180deg, #333333 0%, #18181b 100%) !important',
-        width: '100vw',
-        margin: 0,
-        padding: 0,
-      }}
+      className={`ai-chat-page ai-chat-page-container silver-theme-container ${theme} silver-theme ${!isCollapsed ? 'sidebar-expanded' : 'sidebar-collapsed'}`}
     >
-      <div className="relative w-10 h-10 silver-card metallic-border metallic-glow mt-8 ml-8">
-        <div className="absolute inset-2 flex items-center justify-center">
-          <Code2 className="w-6 h-6" />
-        </div>
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-20 rounded-full animate-pulse"></div>
-      </div>
-      <h1 className="text-3xl font-bold silver-text ml-8 mt-2">
+     
+      <h1 className="ai-chat-title silver-text">
         AI Analysis
       </h1>
       {/* Global dot pattern overlay for entire page */}
-      <div className="fixed inset-0 z-0" style={{
-        backgroundImage: 'radial-gradient(rgba(0, 229, 255, 0.15) 2px, transparent 2px)',
-        backgroundSize: '30px 30px',
-        opacity: 0.3,
-        pointerEvents: 'none'
-      }}></div>
+      <div className="ai-chat-dot-pattern"></div>
       
       {/* Subtle glow effects */}
-      <div className="fixed top-0 left-0 w-full h-full z-0 pointer-events-none">
-        <div className="absolute top-1/4 left-1/4 w-1/2 h-1/2 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(0, 229, 255, 0.3) 0%, transparent 70%)',
-          filter: 'blur(60px)',
-          transform: 'translate(-30%, -30%)'
-        }}></div>
-        <div className="absolute bottom-0 right-0 w-2/3 h-2/3 rounded-full" style={{
-          background: 'radial-gradient(circle, rgba(0, 229, 255, 0.2) 0%, transparent 70%)',
-          filter: 'blur(80px)',
-          transform: 'translate(20%, 20%)'
-        }}></div>
+      <div className="ai-chat-glow-effect">
+        <div className="ai-chat-glow-top"></div>
+        <div className="ai-chat-glow-bottom"></div>
       </div>
       
       {/* Animation containers */}
-      <div ref={particleContainerRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div ref={dataGridRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div ref={scanlineRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div ref={dataStreamRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div ref={heroRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div ref={matrixRef} className="fixed top-0 left-0 w-full h-full z-0" />
-      <div className="max-w-full flex flex-col lg:flex-row gap-6 w-full relative z-10 px-4 py-4 mt-16">
+      <div ref={particleContainerRef} className="ai-chat-animation-container" />
+      <div ref={dataGridRef} className="ai-chat-animation-container" />
+      <div ref={scanlineRef} className="ai-chat-animation-container" />
+      <div ref={dataStreamRef} className="ai-chat-animation-container" />
+      <div ref={heroRef} className="ai-chat-animation-container" />
+      <div ref={matrixRef} className="ai-chat-animation-container" />
+      <div className="ai-chat-content">
         {/* Left side - Image Upload and Analysis Area */}
-        <div className="w-full h-full flex flex-col space-y-6 px-1 sm:px-2 md:px-4 mt-0">
+        <div className="ai-chat-upload-area">
           {/* Upload/Generate Options */}
-          <div className="flex flex-col h-full rounded-lg p-0 overflow-hidden mt-0 w-[90%] mx-auto" style={{
-            background: 'linear-gradient(135deg, #444444 0%, #2a2a2a 100%)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(192, 192, 192, 0.2), 0 0 30px rgba(192, 192, 192, 0.1)',
-            border: '3px solid #555555'
-          }}>
-            <div className="flex items-center justify-between p-4 border-b border-gray-700">
+          <div className="ai-chat-upload-card">
+            <div className="ai-chat-upload-header">
               <h3 className="text-lg font-medium silver-text flex items-center gap-2">
                 <MessageSquare className="w-5 h-5" /> AI Analysis Chat
               </h3>
@@ -2093,12 +2064,7 @@ function AIAnalysisChat() {
             </div>
             <div className="flex items-center justify-center w-full">
               <div
-                className={`flex flex-col items-center justify-center w-full h-64 border-2 border-dashed rounded-lg cursor-pointer ${isDragging ? 'border-cyan-400' : 'border-gray-600 hover:bg-gray-700/50'}`}
-                style={{
-                  background: isDragging ? 'rgba(10, 25, 47, 0.5)' : 'rgba(10, 25, 47, 0.3)',
-                  border: `2px dashed ${isDragging ? 'rgba(0, 229, 255, 0.8)' : 'rgba(0, 229, 255, 0.3)'}`,
-                  boxShadow: isDragging ? 'inset 0 0 30px rgba(0, 229, 255, 0.3), 0 0 20px rgba(0, 229, 255, 0.2)' : 'inset 0 0 20px rgba(0, 229, 255, 0.1)'
-                }}
+                className={`ai-chat-dropzone ${isDragging ? 'ai-chat-dropzone-dragging' : 'ai-chat-dropzone-idle'}`}
                 onDrop={handleFileDrop}
                 onDragOver={(e) => {
                   e.preventDefault();
@@ -2140,17 +2106,17 @@ function AIAnalysisChat() {
 
           {/* Chart Previews Section */}
           {pendingImages.length > 0 && (
-            <div className="rounded-lg p-3 w-full silver-card mt-6">
-              <div className="flex justify-between items-center mb-3 p-2">
+            <div className="ai-chat-preview-section silver-card">
+              <div className="ai-chat-preview-header">
                 <h3 className="text-xl font-semibold silver-text">Chart Previews</h3>
                 
                 {/* Pagination controls */}
                 {analysisResults.length > 1 && (
-                  <div className="flex items-center gap-2">
+                  <div className="ai-chat-pagination">
                     <button 
                       onClick={handlePreviousAnalysis}
                       disabled={currentAnalysisIndex === 0}
-                      className={`p-1 rounded-full ${currentAnalysisIndex === 0 ? 'text-cyan-800' : 'text-cyan-400 hover:bg-cyan-900/30'} silver-card`}
+                      className={`ai-chat-pagination-button silver-card ${currentAnalysisIndex === 0 ? 'ai-chat-pagination-button-disabled' : 'ai-chat-pagination-button-enabled'}`}
                     >
                       <ChevronLeft className="w-6 h-6" />
                     </button>
@@ -2160,7 +2126,7 @@ function AIAnalysisChat() {
                     <button 
                       onClick={handleNextAnalysis}
                       disabled={currentAnalysisIndex === analysisResults.length - 1}
-                      className={`p-1 rounded-full ${currentAnalysisIndex === analysisResults.length - 1 ? 'text-cyan-800' : 'text-cyan-400 hover:bg-cyan-900/30'} silver-card`}
+                      className={`ai-chat-pagination-button silver-card ${currentAnalysisIndex === analysisResults.length - 1 ? 'ai-chat-pagination-button-disabled' : 'ai-chat-pagination-button-enabled'}`}
                     >
                       <ChevronRight className="w-6 h-6" />
                     </button>
@@ -2425,12 +2391,12 @@ function AIAnalysisChat() {
       )}
       {/* Chart Preview */}
       {selectedPreviewUrl && (
-        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50">
-          <div className="rounded-lg shadow-lg overflow-hidden max-w-4xl mx-auto silver-card">
+        <div className="ai-chat-preview-modal">
+          <div className="ai-chat-preview-modal-content silver-card">
             {/* Close button */}
             <button
               onClick={() => setSelectedPreviewUrl(null)}
-              className={`absolute top-2 right-2 ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'} transition-colors`}
+              className={`ai-chat-preview-close ${theme === 'dark' ? 'text-gray-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}
               aria-label="Close chart preview"
             >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
