@@ -103,6 +103,10 @@
 .navbar--dark .navbar-profile,
 .navbar--dark .navbar-logout,
 .navbar--dark .navbar-token {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
+}
+.navbar--dark .navbar-token {
   color: #ffffff !important;
   fill: #ffffff !important;
   background: transparent !important;
@@ -154,11 +158,14 @@
 .navbar--light .navbar-profile,
 .navbar--light .navbar-logout,
 .navbar--light .navbar-token {
+  pointer-events: auto !important;
+  z-index: 9999 !important;
   color: #ffffff !important;
   fill: #ffffff !important;
   background: transparent !important;
   text-shadow: 0 2px 4px #0F91C9 !important;
 }
+
 .navbar--light .navbar-profile:hover,
 .navbar--light .navbar-logout:hover,
 .navbar--light .navbar-token:hover {

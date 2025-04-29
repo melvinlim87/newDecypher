@@ -123,7 +123,9 @@ export function NavBar() {
                         style={{
                           background: 'rgba(0, 133, 215, 0.2)',
                           boxShadow: '0 0 15px rgba(0, 133, 215, 0.2)',
-                          border: '1px solid rgba(0, 133, 215, 0.3)'
+                          border: '1px solid rgba(0, 133, 215, 0.3)',
+                          zIndex: 99999,
+                          position: 'relative'
                         }}
                       >
                         <User className="w-5 h-5 text-[#00A9E0] mr-2" />
@@ -137,7 +139,9 @@ export function NavBar() {
                         style={{
                           background: 'rgba(0, 133, 215, 0.2)',
                           boxShadow: '0 0 15px rgba(0, 133, 215, 0.2)',
-                          border: '1px solid rgba(0, 133, 215, 0.3)'
+                          border: '1px solid rgba(0, 133, 215, 0.3)',
+                          zIndex: 99999,
+                          position: 'relative'
                         }}
                       >
                         <LogOut className="w-5 h-5 text-[#00A9E0] mr-2" />
