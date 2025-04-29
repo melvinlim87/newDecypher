@@ -1,0 +1,158 @@
+/* EAGenerator.css */
+
+/* Global EA Generator page styling */
+.ea-generator-page-container {
+  background: #18181b !important;
+  color: #ffffff !important;
+  min-height: calc(100vh - 4rem) !important;
+  width: 100% !important;
+  margin: 0 auto;
+  overflow-y: auto !important;
+  transition: padding-left 0.3s ease-in-out !important;
+  padding-bottom: 2rem !important;
+  position: relative !important;
+
+  /* Hide scrollbar for all major browsers */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE and Edge */
+}
+.ea-generator-page-container::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+
+@media (min-width: 768px) {
+  .ea-generator-page-container.sidebar-expanded {
+    
+  }
+  .ea-generator-page-container.sidebar-collapsed {
+    padding-left: 4rem !important;
+  }
+}
+
+.ea-generator-page-container.dark {
+  background: #18181b !important;
+  color: #ffffff !important;
+}
+
+.ea-generator-page *, .ea-generator-page *::before, .ea-generator-page *::after {
+  color: var(--logo-inner-blue, #ffffff) !important;
+}
+
+.ea-generator-text, .ea-generator-page h1, .ea-generator-page h2, .ea-generator-page p, .ea-generator-page span,
+.ea-generator-page div:not(.message-content), .ea-generator-page button, .ea-generator-page input,
+.ea-generator-page select, .ea-generator-page option {
+  color: var(--logo-inner-blue, #ffffff) !important;
+  text-shadow: 0 0 5px rgba(0, 229, 255, 0.5) !important;
+}
+
+.ea-generator-page svg, .ea-generator-page .lucide-send, .ea-generator-page .lucide-copy, 
+.ea-generator-page .lucide-image, .ea-generator-page .lucide-bot,
+.ea-generator-page .lucide-arrow-right, .ea-generator-page .lucide-chevron-down,
+.ea-generator-page .lucide-chevron-up, .ea-generator-page .lucide-code-2,
+.ea-generator-page .lucide-paperclip, .ea-generator-page .lucide-x {
+  color: var(--logo-inner-blue, #ffffff) !important;
+  filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.5)) !important;
+}
+
+.ea-generator-card {
+  background: linear-gradient(135deg, #444444 0%, #2a2a2a 100%) !important;
+  border: 3px solid #555555 !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(192, 192, 192, 0.2), 0 0 30px rgba(192, 192, 192, 0.1) !important;
+  backdrop-filter: blur(5px) !important;
+  border-radius: 0.5rem !important;
+  width: 90% !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
+}
+
+.message-content, .whitespace-pre-wrap {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page .whitespace-pre-wrap div,
+.ea-generator-page select,
+.ea-generator-page input,
+.ea-generator-page textarea,
+.ea-generator-page option,
+.ea-generator-page li span,
+.ea-generator-page .strategy-guide-item {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page select {
+  background-color: rgba(176, 180, 185, 0.4) !important;
+  border: 1.5px solid #C9CCCF !important;
+  color: var(--logo-inner-blue, #ffffff) !important;
+}
+
+.ea-generator-page textarea {
+  background-color: rgba(10, 25, 47, 0.6) !important;
+  border: 1px solid rgba(0, 229, 255, 0.2) !important;
+  color: white !important;
+}
+
+html body .ea-generator-page .message-content,
+html body .ea-generator-page .message-content div,
+html body .ea-generator-page .message-content span,
+html body .ea-generator-page .message-content p,
+html body .ea-generator-page .message-content li {
+  color: #E3E5E7 !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page [class*="model-selector"],
+.ea-generator-page [class*="input-area"],
+.ea-generator-page [class*="input-container"] {
+  background-color: rgba(176, 180, 185, 0.4) !important;
+  border: 1.5px solid #C9CCCF !important;
+}
+
+.ea-generator-page button[type="submit"] {
+  background: linear-gradient(to right, #00A9E0, #147BC1) !important;
+  border: 1px solid rgba(0, 229, 255, 0.3) !important;
+  color: white !important;
+  text-shadow: 0 0 3px rgba(0, 229, 255, 0.5) !important;
+}
+
+.ea-generator-page [class*="example"],
+.ea-generator-page [class*="example"] span,
+.ea-generator-page [class*="example"] p,
+.ea-generator-page [class*="example"] div {
+  color: #E3E5E7 !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page textarea {
+  background-color: rgba(10, 25, 47, 0.6) !important;
+  border: 1px solid rgba(0, 229, 255, 0.2) !important;
+  color: white !important;
+  text-shadow: none !important;
+}
+
+html body .ea-generator-page span,
+html body .ea-generator-page p,
+html body .ea-generator-page div:not(.ea-generator-card):not(.message-content pre):not(.message-content code) {
+  color: inherit !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page button {
+  color: white !important;
+  text-shadow: none !important;
+}
+
+.ea-generator-page select,
+.ea-generator-page option,
+.ea-generator-page optgroup {
+  background-color: rgba(10, 25, 47, 0.6) !important;
+  color: white !important;
+  text-shadow: none !important;
+}
+
+.message-content pre, .message-content code {
+  color: inherit !important;
+  text-shadow: none !important;
+}

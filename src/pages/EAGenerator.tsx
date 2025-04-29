@@ -1,14 +1,15 @@
+import '../styles/EAGenerator.css';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
- import { Button } from '../components/Button';
- import { AnimatedIntro } from '../components/AnimatedIntro';
- import { generateEACode } from '../lib/api';
- import { Send, Copy, Image as ImageIcon, Bot, ArrowRight, ChevronDown, ChevronUp, Code2, Paperclip, X } from 'lucide-react';
- import { auth } from '../lib/firebase';
- import { onAuthStateChanged } from 'firebase/auth';
- import { saveEAHistory } from '../lib/firebase';
- import { useLocation } from 'react-router-dom';
- import { AVAILABLE_MODELS } from '../services/openrouter';
- import { useTheme } from '../contexts/ThemeContext';
+import { Button } from '../components/Button';
+import { AnimatedIntro } from '../components/AnimatedIntro';
+import { generateEACode } from '../lib/api';
+import { Send, Copy, Image as ImageIcon, Bot, ArrowRight, ChevronDown, ChevronUp, Code2, Paperclip, X } from 'lucide-react';
+import { auth } from '../lib/firebase';
+import { onAuthStateChanged } from 'firebase/auth';
+import { saveEAHistory } from '../lib/firebase';
+import { useLocation } from 'react-router-dom';
+import { AVAILABLE_MODELS } from '../services/openrouter';
+import { useTheme } from '../contexts/ThemeContext';
 import { useSidebarState } from '../contexts/SidebarContext';
  
  export function EAGenerator() {
@@ -18,187 +19,7 @@ import { useSidebarState } from '../contexts/SidebarContext';
    const { theme } = useTheme();
    const { isCollapsed } = useSidebarState();
 
-   // Add a style tag for themed background that matches navbar
-   useEffect(() => {
-     const eaGeneratorStyle = document.createElement('style');
-     eaGeneratorStyle.innerHTML = `
-       /* Global EA Generator page styling */
-       .ea-generator-page-container {
-         background: #18181b !important;
-         color: #ffffff !important;
-         min-height: calc(100vh - 4rem) !important;
-         position: absolute !important;
-         top: 4rem !important;
-         left: 0 !important;
-         right: 0 !important;
-         bottom: 0 !important;
-         overflow-y: auto !important;
-         transition: padding-left 0.3s ease-in-out !important;
-         padding-bottom: 2rem !important; /* Add padding at the bottom */
-       }
-       
-       /* Adjust padding based on sidebar state */
-       @media (min-width: 768px) {
-         .ea-generator-page-container.sidebar-expanded {
-           padding-left: 16rem !important; /* 64px - matches md:pl-64 in Layout.tsx */
-         }
-         
-         .ea-generator-page-container.sidebar-collapsed {
-           padding-left: 4rem !important; /* 16px - matches md:pl-16 in Layout.tsx */
-         }
-       }
-       
-       .ea-generator-page-container.dark {
-         background: #18181b !important;
-         color: #ffffff !important;
-       }
-       
-       /* Force all text elements to use the navbar white */
-       .ea-generator-page *, .ea-generator-page *::before, .ea-generator-page *::after {
-         color: var(--logo-inner-blue, #ffffff) !important; /* Fallback changed to white */
-       }
-       
-       /* Apply the token styling to EA Generator elements */
-       .ea-generator-text, .ea-generator-page h1, .ea-generator-page h2, .ea-generator-page p, .ea-generator-page span,
-       .ea-generator-page div:not(.message-content), .ea-generator-page button, .ea-generator-page input,
-       .ea-generator-page select, .ea-generator-page option {
-         color: var(--logo-inner-blue, #ffffff) !important; /* Fallback changed to white */
-         text-shadow: 0 0 5px rgba(0, 229, 255, 0.5) !important;
-       }
-       
-       /* Target all icons in EA Generator */
-       .ea-generator-page svg, .ea-generator-page .lucide-send, .ea-generator-page .lucide-copy, 
-       .ea-generator-page .lucide-image, .ea-generator-page .lucide-bot,
-       .ea-generator-page .lucide-arrow-right, .ea-generator-page .lucide-chevron-down,
-       .ea-generator-page .lucide-chevron-up, .ea-generator-page .lucide-code-2,
-       .ea-generator-page .lucide-paperclip, .ea-generator-page .lucide-x {
-         color: var(--logo-inner-blue, #ffffff) !important; /* Fallback changed to white */
-         filter: drop-shadow(0 0 5px rgba(0, 229, 255, 0.5)) !important;
-       }
-       
-       /* Card styling */
-       .ea-generator-card {
-         background: linear-gradient(135deg, #444444 0%, #2a2a2a 100%) !important;
-         border: 3px solid #555555 !important;
-         box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3), 0 0 15px rgba(192, 192, 192, 0.2), 0 0 30px rgba(192, 192, 192, 0.1) !important;
-         backdrop-filter: blur(5px) !important;
-         border-radius: 0.5rem !important;
-         width: 90% !important;
-         margin-left: auto !important;
-         margin-right: auto !important;
-       }
-       
-       /* Message content should keep its original styling */
-       .message-content, .whitespace-pre-wrap {
-         color: inherit !important;
-         text-shadow: none !important;
-       }
-       
-       /* Ensure all message text is properly styled */
-       .ea-generator-page .whitespace-pre-wrap div,
-       .ea-generator-page select,
-       .ea-generator-page input,
-       .ea-generator-page textarea,
-       .ea-generator-page option,
-       .ea-generator-page li span,
-       .ea-generator-page .strategy-guide-item {
-         color: inherit !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix model selector dropdown */
-       .ea-generator-page select {
-         background-color: rgba(176, 180, 185, 0.4) !important;
-         border: 1.5px solid #C9CCCF !important;
-         color: var(--logo-inner-blue, #ffffff) !important; /* Fallback changed to white */
-       }
-       
-       /* Fix input field */
-       .ea-generator-page textarea {
-         background-color: rgba(10, 25, 47, 0.6) !important;
-         border: 1px solid rgba(0, 229, 255, 0.2) !important;
-         color: white !important;
-       }
-       
-       /* Fix message content in the middle section - with highest specificity */
-       html body .ea-generator-page .message-content,
-       html body .ea-generator-page .message-content div,
-       html body .ea-generator-page .message-content span,
-       html body .ea-generator-page .message-content p,
-       html body .ea-generator-page .message-content li {
-         color: #E3E5E7 !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix the model selector and bottom input area */
-       .ea-generator-page [class*="model-selector"],
-       .ea-generator-page [class*="input-area"],
-       .ea-generator-page [class*="input-container"] {
-         background-color: rgba(176, 180, 185, 0.4) !important;
-         border: 1.5px solid #C9CCCF !important;
-       }
-       
-       /* Fix the send button */
-       .ea-generator-page button[type="submit"] {
-         background: linear-gradient(to right, #00A9E0, #147BC1) !important;
-         border: 1px solid rgba(0, 229, 255, 0.3) !important;
-         color: white !important;
-         text-shadow: 0 0 3px rgba(0, 229, 255, 0.5) !important;
-       }
-       
-       /* Fix the example section at the bottom */
-       .ea-generator-page [class*="example"],
-       .ea-generator-page [class*="example"] span,
-       .ea-generator-page [class*="example"] p,
-       .ea-generator-page [class*="example"] div {
-         color: #E3E5E7 !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix the textarea input */
-       .ea-generator-page textarea {
-         background-color: rgba(10, 25, 47, 0.6) !important;
-         border: 1px solid rgba(0, 229, 255, 0.2) !important;
-         color: white !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix all spans and text elements with higher specificity */
-       html body .ea-generator-page span,
-       html body .ea-generator-page p,
-       html body .ea-generator-page div:not(.ea-generator-card):not(.message-content pre):not(.message-content code) {
-         color: inherit !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix buttons */
-       .ea-generator-page button {
-         color: white !important;
-         text-shadow: none !important;
-       }
-       
-       /* Fix the model selector */
-       .ea-generator-page select,
-       .ea-generator-page option,
-       .ea-generator-page optgroup {
-         background-color: rgba(10, 25, 47, 0.6) !important;
-         color: white !important;
-         text-shadow: none !important;
-       }
-       
-       /* Code blocks should keep their original styling */
-       .message-content pre, .message-content code {
-         color: inherit !important;
-         text-shadow: none !important;
-       }
-     `;
-     
-     document.head.appendChild(eaGeneratorStyle);
-     
-     return () => {
-       document.head.removeChild(eaGeneratorStyle);
-     };
-   }, []);
+   
  
    const [isGuideExpanded, setIsGuideExpanded] = useState(true);
    const [hasSeenIntro, setHasSeenIntro] = useState(true);
