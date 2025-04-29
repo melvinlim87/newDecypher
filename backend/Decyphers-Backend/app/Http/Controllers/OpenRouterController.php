@@ -232,7 +232,12 @@ EOT;
             return response()->json(['error' => $response->json()], $response->status());
         }
 
-        return response()->json($response->json());
+        $data = $response->json();
+        $assistantReply = isset($data['choices'][0]['message']['content']) ? $data['choices'][0]['message']['content'] : null;
+        if ($assistantReply === null) {
+            return response()->json(['error' => 'No assistant reply found in API response.'], 500);
+        }
+        return response()->json(['reply' => $assistantReply]);
     }
 
     // --- Chat Message Endpoint ---
@@ -271,7 +276,12 @@ EOT;
             return response()->json(['error' => $response->json()], $response->status());
         }
 
-        return response()->json($response->json());
+        $data = $response->json();
+        $assistantReply = isset($data['choices'][0]['message']['content']) ? $data['choices'][0]['message']['content'] : null;
+        if ($assistantReply === null) {
+            return response()->json(['error' => 'No assistant reply found in API response.'], 500);
+        }
+        return response()->json(['reply' => $assistantReply]);
     }
 
     // --- Cost Calculation Endpoint ---

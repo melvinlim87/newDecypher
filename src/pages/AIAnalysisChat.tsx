@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, AlertCircle, X, Loader2, Send, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
 import { UploadConfirmationModal } from '../components/UploadConfirmationModal';
-import { AVAILABLE_MODELS, analyzeImage, type ModelId, sendChatMessage } from '../services/openrouter';
+import { AVAILABLE_MODELS, type ModelId } from '../services/openrouter';
+import { analyzeImageBackend, sendChatMessageBackend } from '../services/backendApi';
 import Markdown from 'react-markdown';
 import { useTypingEffect } from '../hooks/useTypingEffect';
 import { auth, database } from '../lib/firebase';
@@ -558,7 +559,7 @@ const ChatMessage = ({ message, isLoading = false, isCurrent = false }: { messag
                 : 'text-white'
         }`}
         style={message.role === 'assistant' && theme === 'light' ? {textShadow: '0 0 2px rgba(0, 229, 255, 0.3)'} : {}}>
-          {message.content}
+          {typeof message.content === 'string' ? message.content : (message.content?.reply ?? JSON.stringify(message.content))}
         </Markdown>
         {isLoading && isCurrent && (
           <div className={`flex items-center mt-2 ${theme === 'dark' ? 'text-cyan-400' : 'text-cyan-300'}`}>
@@ -1078,7 +1079,8 @@ function AIAnalysisChat() {
         setCurrentChart(i + 1);
         const imageUrl = chartPreviews[i];
         console.log('Starting image analysis...');
-        const result = await analyzeImage(imageUrl, selectedModel);
+        // Call backend API instead of direct OpenRouter
+      const result = await analyzeImageBackend(imageUrl, selectedModel);
         console.log('Image analysis complete. Result:', result.substring(0, 100) + '...');
 
         // Extract symbol and timeframe using regex
@@ -1381,11 +1383,11 @@ function AIAnalysisChat() {
         .filter(msg => msg.content !== analysis)
         .concat([{ role: 'user', content: userMessage }]);
       
-      const response = await sendChatMessage(
+      // Call backend API instead of direct OpenRouter
+      const response = await sendChatMessageBackend(
         messagesToSend,
         selectedModel,
-        analysis,
-        analysisType
+        analysis
       );
       
       // Update chat history
@@ -2105,7 +2107,22 @@ function AIAnalysisChat() {
                       )
                     }}
                   >
-                    {analysis}
+                    {(typeof analysis === 'string'
+                      ? analysis
+                          // Remove redundant unknowns
+                          .replace(/^Symbol: Unknown\s*\n?/i, '')
+                          .replace(/^Timeframe: Unknown\s*\n?/i, '')
+                          // Standardize Timeframe formatting
+                          .replace(/Timeframe:\s*\*\*(.*?)\*\*/i, '**Timeframe:** $1')
+                          .replace(/Timeframe:\s*/i, '**Timeframe:** ')
+                          // Standardize Symbol/Trading Pair formatting
+                          .replace(/Symbol\/Trading Pair:\s*/i, '**Symbol/Trading Pair:** ')
+                          // Add spacing after colons if missing
+                          .replace(/:\s*(\S)/g, ': $1')
+                          // Add line breaks for clarity after Timeframe and Symbol
+                          .replace(/(\*\*Timeframe:\*\*.*?\n)/, '$1\n')
+                          .replace(/(\*\*Symbol\/Trading Pair:\*\*.*?\n)/, '$1\n')
+                        : '')}
                   </Markdown>
                 </div>
               </div>
