@@ -6,6 +6,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
 use App\Models\User;
+use Kreait\Firebase\Auth as FirebaseAuth;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -69,5 +71,41 @@ class AuthController extends Controller
     {
         $request->user()->currentAccessToken()->delete();
         return response()->json(['message' => 'Logged out']);
+    }
+
+    // Firebase login for bridging Firebase Auth to Laravel Sanctum
+    public function firebaseLogin(Request $request, FirebaseAuth $firebaseAuth)
+    {
+        $request->validate([
+            'idToken' => 'required|string',
+        ]);
+
+        try {
+            $verifiedIdToken = $firebaseAuth->verifyIdToken($request->idToken);
+            $firebaseUid = $verifiedIdToken->claims()->get('sub');
+            $email = $verifiedIdToken->claims()->get('email');
+            $name = $verifiedIdToken->claims()->get('name', $email);
+
+            // Find or create user
+            $user = User::firstOrCreate(
+                ['firebase_uid' => $firebaseUid],
+                [
+                    'email' => $email,
+                    'name' => $name,
+                    'password' => Hash::make(Str::random(32)), // random password
+                ]
+            );
+
+            // Issue Sanctum token
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
+                'user' => $user,
+            ]);
+        } catch (\Throwable $e) {
+            return response()->json(['message' => 'Invalid Firebase token'], 401);
+        }
     }
 }

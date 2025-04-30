@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use App\Services\FirebaseAuth;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -11,7 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        //  
+        $this->app->singleton(\App\Services\FirebaseAuth::class, function ($app) {
+            return new \App\Services\FirebaseAuth();
+        });
     }
 
     /**
