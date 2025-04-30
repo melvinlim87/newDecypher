@@ -8,37 +8,34 @@ import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveEAHistory } from '../lib/firebase';
 import { useLocation } from 'react-router-dom';
-import { AVAILABLE_MODELS } from '../services/openrouter';
+import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import { useSidebarState } from '../contexts/SidebarContext';
- 
- export function EAGenerator() {
-   const location = useLocation();
-   const { state } = location;
-   const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
-   const { theme } = useTheme();
-   const { isCollapsed } = useSidebarState();
 
-   
- 
-   const [isGuideExpanded, setIsGuideExpanded] = useState(true);
-   const [hasSeenIntro, setHasSeenIntro] = useState(true);
-   const [zoomedImage, setZoomedImage] = useState<string | null>(null);
-   const [attachedFile, setAttachedFile] = useState<File | null>(null);
-   const [attachedImage, setAttachedImage] = useState<string | null>(null);
-   const [imagePreview, setImagePreview] = useState<string | null>(null);
-   const fileInputRef = useRef<HTMLInputElement>(null);
-   const [messages, setMessages] = useState<Array<{
-     role: 'user' | 'assistant'; 
-     content: string;
-     image?: string; 
-   }>>([]);
-   // Initialize with the model from location state if available, otherwise use default
+export function EAGenerator() {
+  const location = useLocation();
+  const { state } = location;
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+  const { theme } = useTheme();
+  const { isCollapsed } = useSidebarState();
+
+  const [isGuideExpanded, setIsGuideExpanded] = useState(true);
+  const [hasSeenIntro, setHasSeenIntro] = useState(true);
+  const [zoomedImage, setZoomedImage] = useState<string | null>(null);
+  const [attachedFile, setAttachedFile] = useState<File | null>(null);
+  const [attachedImage, setAttachedImage] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [messages, setMessages] = useState<Array<{
+    role: 'user' | 'assistant';
+    content: string;
+    image?: string;
+  }>>([]);
+  // Initialize with the model from location state if available, otherwise use default
   const [selectedModel, setSelectedModel] = useState(() => {
     // Check if we have a model in location state
     console.log('DEBUG - Location state at initialization:', location.state);
     console.log('DEBUG - Available models:', AVAILABLE_MODELS.map(m => m.id));
-    
     if (location.state?.model) {
       console.log('DEBUG - Initializing with model from location state:', location.state.model);
       return location.state.model;

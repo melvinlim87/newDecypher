@@ -1,6 +1,6 @@
 import React from 'react';
 import { Check } from 'lucide-react';
-import { AVAILABLE_MODELS, type ModelId } from '../services/openrouter';
+import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
 
 interface ModelSelectorProps {
   selectedModel: ModelId;

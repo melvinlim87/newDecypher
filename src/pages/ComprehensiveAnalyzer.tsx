@@ -3,7 +3,8 @@ import { ImageUploader } from '../components/ImageUploader';
 import { ModelSelector } from '../components/ModelSelector';
 import { SymbolSelector } from '../components/SymbolSelector';
 import { TechnicalGauge } from '../components/TechnicalGauge';
-import { analyzeImage, AVAILABLE_MODELS, type ModelId } from '../services/openrouter';
+import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
+import { analyzeImageBackend } from '../services/backendApi';
 import { Brain, LineChart, TrendingUp, Gauge, Target, AlertCircle, X, ChevronDown, ChevronUp, Clock, Loader2, Search, Timer, Check } from 'lucide-react';
 import { Button } from '../components/Button';
 import { fetchTechnicalIndicators } from '../services/yahooFinance';
@@ -416,7 +417,7 @@ export function ComprehensiveAnalyzer() {
 
     try {
       // Analyze each chart
-      const analysisPromises = charts.map(chart => analyzeImage(chart.url, selectedModel));
+      const analysisPromises = charts.map(chart => analyzeImageBackend(chart.url, selectedModel));
       const results = await Promise.all(analysisPromises);
       
       if (!results.length || results.some(result => !result)) {

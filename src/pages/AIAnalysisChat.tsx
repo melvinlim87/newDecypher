@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, AlertCircle, X, Loader2, Send, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
 import { UploadConfirmationModal } from '../components/UploadConfirmationModal';
-import { AVAILABLE_MODELS, type ModelId } from '../services/openrouter';
+import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
 import { analyzeImageBackend, sendChatMessageBackend } from '../services/backendApi';
 import Markdown from 'react-markdown';
 import { useTypingEffect } from '../hooks/useTypingEffect';

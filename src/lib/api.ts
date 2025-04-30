@@ -1,8 +1,7 @@
 import { auth, database, recordTokenUsage } from './firebase';
 import { ref, push, get, set, update } from 'firebase/database';
 import { getAuthHeader } from '../utils/auth';
-import { calculateCost, calculateTokenCost } from '../services/openrouter';
-import { MODEL_BASE_COSTS } from '../services/openrouter';
+import { calculateCost, calculateTokenCost, MODEL_BASE_COSTS } from '../services/modelUtils';
 
 interface GenerateEACodeParams {
   message: string;
