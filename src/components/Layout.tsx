@@ -88,7 +88,7 @@ export function Layout({ children }: LayoutProps) {
       </div>
       
       {/* Fixed navbar at the top */}
-      <div className="flex-none relative z-10">
+      <div className="flex-none relative z-50">
         <NavBar />
       </div>
       

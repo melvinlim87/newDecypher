@@ -16,10 +16,14 @@ Route::middleware([
 ])->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
-});
-
 // OpenRouter imitation endpoints
 Route::post('/openrouter/analyze-image', [\App\Http\Controllers\OpenRouterController::class, 'analyzeImage']);
 Route::post('/openrouter/send-chat', [\App\Http\Controllers\OpenRouterController::class, 'sendChatMessage']);
 Route::post('/openrouter/calculate-cost', [\App\Http\Controllers\OpenRouterController::class, 'calculateCostEndpoint']);
+
+
+
+
+
+});
 
