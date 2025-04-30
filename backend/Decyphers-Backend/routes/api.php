@@ -11,6 +11,9 @@ Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/firebase-login', [FirebaseAuthController::class, 'login']);
 
+// Existing OpenRouter routes
+Route::post('/openrouter/generate-ea', [App\Http\Controllers\OpenRouterController::class, 'generateEA']);
+
 // Protected routes
 Route::middleware([EnsureFrontendRequestsAreStateful::class,'auth:sanctum',])->group(function () {
 

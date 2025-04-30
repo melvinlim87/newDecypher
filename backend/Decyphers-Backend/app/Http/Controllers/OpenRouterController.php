@@ -240,6 +240,52 @@ EOT;
         return response()->json(['reply' => $assistantReply]);
     }
 
+    // --- EA Code Generation Endpoint ---
+    public function generateEA(Request $request)
+    {
+        $modelId = $request->input('modelId', 'anthropic/claude-3-haiku');
+        $messages = $request->input('messages', []);
+        $imageData = $request->input('image', null);
+
+        // If imageData is present, append to user message content
+        if ($imageData) {
+            foreach ($messages as &$msg) {
+                if ($msg['role'] === 'user') {
+                    // If content is an array, append image; otherwise, convert to array
+                    if (is_array($msg['content'])) {
+                        $msg['content'][] = [ 'type' => 'image_url', 'image_url' => [ 'url' => $imageData ] ];
+                    } else {
+                        $msg['content'] = [
+                            [ 'type' => 'text', 'text' => $msg['content'] ],
+                            [ 'type' => 'image_url', 'image_url' => [ 'url' => $imageData ] ]
+                        ];
+                    }
+                }
+            }
+        }
+
+        $apiKey = env('OPENROUTER_API_KEY');
+        $apiUrl = 'https://openrouter.ai/api/v1/chat/completions';
+
+        $response = Http::withHeaders([
+            'Authorization' => "Bearer $apiKey",
+            'Content-Type' => 'application/json',
+            'X-Title' => 'AI Market Analyst'
+        ])->post($apiUrl, [
+            'model' => $modelId,
+            'max_tokens' => 4000,
+            'temperature' => 0.7,
+            'messages' => $messages
+        ]);
+
+        if ($response->failed()) {
+            return response()->json(['error' => $response->json()], $response->status());
+        }
+
+        $data = $response->json();
+        return response()->json($data, $response->status());
+    }
+
     // --- Chat Message Endpoint ---
     public function sendChatMessage(Request $request)
     {

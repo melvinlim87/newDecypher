@@ -2,7 +2,14 @@ import '../styles/EAGenerator.css';
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { Button } from '../components/Button';
 import { AnimatedIntro } from '../components/AnimatedIntro';
-import { generateEACode } from '../lib/api';
+import { sendChatMessageBackend } from '../services/backendApi';
+
+type BackendEAResponse = {
+  reply?: string;
+  content?: string;
+  error?: string;
+  [key: string]: any;
+};
 import { Send, Copy, Image as ImageIcon, Bot, ArrowRight, ChevronDown, ChevronUp, Code2, Paperclip, X } from 'lucide-react';
 import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -503,24 +510,31 @@ export function EAGenerator() {
      const contextMessages = messages.slice(1).slice(-4);
  
      try {
-       const response = await generateEACode({
-         message: newUserMessage.content,
-         imageData: newUserMessage.image,
-         previousMessages: contextMessages,
-         signal: new AbortController().signal,
-         modelId: selectedModel
-       });
-       
-       if (!response.success) {
-         throw new Error(response.error || 'Failed to analyze trading strategy');
-       }
- 
-       if (response.content) {
-         const newAssistantMessage = { role: 'assistant' as const, content: response.content };
-         setMessages(prev => [...prev, newAssistantMessage]);
-       } else {
-         throw new Error('No analysis was generated. Please provide more details about your trading strategy.');
-       }
+        // Compose messages array for backend
+        const backendMessages = [
+          ...messages.slice(1).slice(-4), // previous context
+          newUserMessage
+        ];
+        const response: BackendEAResponse = await sendChatMessageBackend(backendMessages, selectedModel);
+        
+        if (!response || (typeof response !== 'object')) {
+          throw new Error('Failed to analyze trading strategy (invalid backend response)');
+        }
+        if ('error' in response && response.error) {
+          throw new Error(response.error || 'Failed to analyze trading strategy');
+        }
+        
+        const replyContent = typeof response.reply === 'string' && response.reply.trim().length > 0
+          ? response.reply
+          : (typeof response.content === 'string' && response.content.trim().length > 0
+            ? response.content
+            : undefined);
+        if (replyContent) {
+          const newAssistantMessage = { role: 'assistant' as const, content: replyContent };
+          setMessages(prev => [...prev, newAssistantMessage]);
+        } else {
+          throw new Error('No analysis was generated. Please provide more details about your trading strategy.');
+        }
      } catch (error) {
        const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
        setMessages(prev => [...prev, { 
