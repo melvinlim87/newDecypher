@@ -3,6 +3,16 @@ import axios from 'axios';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/api';
 
+export async function getAvailableModels() {
+  const response = await axios.get(`${API_BASE_URL}/models`);
+  return response.data;
+}
+
+export async function calculateModelTokenCost(modelId: string, isAnalysis: boolean = false) {
+  const response = await axios.post(`${API_BASE_URL}/model-cost`, { modelId, isAnalysis });
+  return response.data;
+}
+
 export async function analyzeImageBackend(imageUrl: string, modelId: string) {
   const token = localStorage.getItem('sanctum_token');
   const response = await axios.post(`${API_BASE_URL}/openrouter/analyze-image`, {
@@ -19,7 +29,7 @@ export async function analyzeImageBackend(imageUrl: string, modelId: string) {
 
 export async function sendChatMessageBackend(messages: any[], modelId: string, chartAnalysis?: string) {
   const token = localStorage.getItem('sanctum_token');
-  const response = await axios.post(`${API_BASE_URL}/openrouter/send-chat`, {
+   const response = await axios.post(`${API_BASE_URL}/openrouter/send-chat`, {
     messages,
     modelId,
     chartAnalysis

@@ -2,9 +2,7 @@ import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
-import { Analyzer } from './pages/Analyzer';
 import { EAGenerator } from './pages/EAGenerator';
-import { ComprehensiveAnalyzer } from './pages/ComprehensiveAnalyzer';
 import { History } from './pages/History';
 import { AnalysisHistory } from './pages/AnalysisHistory';
 import { EAHistory } from './pages/EAHistory';
@@ -64,14 +62,6 @@ function App() {
               }
             />
             <Route
-              path="/analyzer"
-              element={
-                <ProtectedRoute>
-                  <Analyzer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
               path="/ea-generator"
               element={
                 <ProtectedRoute>
@@ -87,15 +77,7 @@ function App() {
                 </ProtectedRoute>
               }
             />
-            <Route
-              path="/comprehensive-analyzer"
-              element={
-                <ProtectedRoute>
-                  <ComprehensiveAnalyzer />
-                </ProtectedRoute>
-              }
-            />
-            <Route
+                        <Route
               path="/history"
               element={
                 <ProtectedRoute>

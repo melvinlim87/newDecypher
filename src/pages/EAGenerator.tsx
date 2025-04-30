@@ -15,7 +15,7 @@ import { auth } from '../lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { saveEAHistory } from '../lib/firebase';
 import { useLocation } from 'react-router-dom';
-import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
+
 import { useTheme } from '../contexts/ThemeContext';
 import { useSidebarState } from '../contexts/SidebarContext';
 
@@ -39,18 +39,45 @@ export function EAGenerator() {
     image?: string;
   }>>([]);
   // Initialize with the model from location state if available, otherwise use default
-  const [selectedModel, setSelectedModel] = useState(() => {
-    // Check if we have a model in location state
-    console.log('DEBUG - Location state at initialization:', location.state);
-    console.log('DEBUG - Available models:', AVAILABLE_MODELS.map(m => m.id));
-    if (location.state?.model) {
-      console.log('DEBUG - Initializing with model from location state:', location.state.model);
-      return location.state.model;
+  type Model = {
+    id: string;
+    name: string;
+    description: string;
+    premium: boolean;
+    creditCost: number;
+    beta: boolean;
+  };
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>("");
+  const [loadingModels, setLoadingModels] = useState(true);
+  const [modelError, setModelError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setLoadingModels(true);
+    import('../services/backendApi').then(({ getAvailableModels }) => {
+      getAvailableModels()
+        .then((data) => {
+          setModels(data as Model[]);
+          if (!selectedModel && data.length > 0) {
+            setSelectedModel(data[0].id);
+          }
+          setLoadingModels(false);
+        })
+        .catch(() => {
+          setModelError('Failed to load models');
+          setLoadingModels(false);
+        });
+    });
+    // eslint-disable-next-line
+  }, []);
+
+  // Update selectedModel if models change and selectedModel is empty
+  useEffect(() => {
+    if (!selectedModel && models.length > 0) {
+      setSelectedModel(models[0].id);
     }
-    // Otherwise use the default model
-    console.log('DEBUG - No model in location state, using default:', AVAILABLE_MODELS[0].id);
-    return AVAILABLE_MODELS[0].id;
-  });
+  }, [models]);
+
  
    // Helper function to extract title from conversation
    const extractTitle = (messages: Array<{role: string; content: string}>) => {
@@ -908,86 +935,63 @@ export function EAGenerator() {
              }}>
                 <div className="flex flex-wrap items-center mb-2 sm:mb-3">
                   <span className="text-sm flex items-center ea-generator-text">
-                    Model: {AVAILABLE_MODELS.find(model => model.id === selectedModel)?.name}
-                    {AVAILABLE_MODELS.find(model => model.id === selectedModel)?.creditCost === 0 && 
+                    Model: {models.find(model => model.id === selectedModel)?.name}
+                    {models.find(model => model.id === selectedModel)?.creditCost === 0 && 
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-cyan-900/70 text-cyan-200 border border-cyan-500/30">Free</span>
                     }
-                    {AVAILABLE_MODELS.find(model => model.id === selectedModel)?.creditCost > 0 && 
+                    {models.find(model => model.id === selectedModel)?.creditCost > 0 && 
                       <span className="ml-2 text-xs ea-generator-text">
-                        {AVAILABLE_MODELS.find(model => model.id === selectedModel)?.creditCost}x credit
+                        {models.find(model => model.id === selectedModel)?.creditCost}x credit
                       </span>
                     }
-                    {AVAILABLE_MODELS.find(model => model.id === selectedModel)?.beta && 
+                    {models.find(model => model.id === selectedModel)?.beta && 
                       <span className="ml-2 inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-900/60 text-white border border-cyan-500/30">Beta</span>
                     }
                   </span>
-                  <select 
-                    id="model-select" 
-                    value={selectedModel} 
-                    onChange={handleModelChange} 
-                    className="p-2 rounded-lg border ml-auto bg-gray-900/70 border-cyan-500/30 text-white"
-                    style={{
-                      boxShadow: '0 0 10px rgba(0, 229, 255, 0.2)'
-                    }}
-                  >
-                   <optgroup label="Premium Models">
-                     {AVAILABLE_MODELS.filter(model => model.premium).map((model) => (
-                       <option key={model.id} value={model.id}>
-                         {model.name} {model.creditCost > 0 && `(${model.creditCost}x credit)`} {model.beta && '• Beta'}
-                       </option>
-                     ))}
-                   </optgroup>
-                   <optgroup label="Non-Premium Models">
-                     {AVAILABLE_MODELS.filter(model => !model.premium).map((model) => (
-                       <option key={model.id} value={model.id}>
-                         {model.name} {model.creditCost > 0 && `(${model.creditCost}x credit)`} {model.beta && '• Beta'}
-                       </option>
-                     ))}
-                   </optgroup>
-                 </select>
-               </div>
-               <textarea
-                 value={input}
-                 onChange={(e) => setInput(e.target.value)}
-                 onKeyDown={(e) => {
-                   if (e.key === 'Enter') {
-                     // If Shift+Enter, allow new line
-                     if (e.shiftKey) {
-                       return;
-                     }
-                     // Otherwise prevent default (new line) and submit if possible
-                     e.preventDefault();
-                     if (!isGenerating && input.trim()) {
-                       handleSubmit(e as unknown as React.FormEvent);
-                     }
-                   }
-                 }}
-                 placeholder="Type your strategy"
-                 className={`w-full h-32 sm:h-36 md:h-40 p-3 sm:p-4 rounded-lg focus:outline-none focus:ring-1 resize-none ${
-                   theme === 'light'
-                     ? 'bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
-                     : 'bg-gray-800/30 border border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500'
-                 }`}
-                 disabled={isGenerating}
-                 onPaste={(e) => {
-                   const items = Array.from(e.clipboardData.items);
-                   const imageItem = items.find(item => item.type.startsWith('image/'));
-                   
-                   if (imageItem) {
-                     const file = imageItem.getAsFile();
-                     if (file) {
-                       const reader = new FileReader();
-                       reader.onload = (event) => {
-                         const imageData = event.target?.result as string;
-                         setAttachedImage(imageData);
-                         setImagePreview(imageData);
-                         setHasClipboardImage(true);
-                       };
-                       reader.readAsDataURL(file);
-                     }
-                   }
-                 }}
-               />
+                </div>
+                <textarea
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      // If Shift+Enter, allow new line
+                      if (e.shiftKey) {
+                        return;
+                      }
+                      // Otherwise prevent default (new line) and submit if possible
+                      e.preventDefault();
+                      if (!isGenerating && input.trim()) {
+                        handleSubmit(e as unknown as React.FormEvent);
+                      }
+                    }
+                  }}
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Type your strategy"
+                  className={`w-full h-32 sm:h-36 md:h-40 p-3 sm:p-4 rounded-lg focus:outline-none focus:ring-1 resize-none ${
+                    theme === 'light'
+                      ? 'bg-gray-50 border border-gray-300 text-gray-800 placeholder-gray-500 focus:border-blue-500 focus:ring-blue-500'
+                      : 'bg-gray-800/30 border border-gray-700 text-white placeholder-gray-500 focus:border-indigo-500 focus:ring-indigo-500'
+                  }`}
+                  disabled={isGenerating}
+                  onPaste={(e) => {
+                    const items = Array.from(e.clipboardData.items);
+                    const imageItem = items.find(item => item.type.startsWith('image/'));
+                    
+                    if (imageItem) {
+                      const file = imageItem.getAsFile();
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          const imageData = event.target?.result as string;
+                          setAttachedImage(imageData);
+                          setImagePreview(imageData);
+                          setHasClipboardImage(true);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                    }
+                  }}
+                />
+                
                 {/* File Attachment Section */}
                 {attachedFile && (
                   <div className={`mt-2 mb-4 flex items-center gap-2 rounded-lg p-2 border ${

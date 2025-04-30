@@ -1,7 +1,18 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, AlertCircle, X, Loader2, Send, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
 import { UploadConfirmationModal } from '../components/UploadConfirmationModal';
-import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
+import { getAvailableModels } from '../services/backendApi';
+
+// Define Model type locally (matching ModelSelector)
+interface Model {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  creditCost: number;
+  beta: boolean;
+}
+
 import { analyzeImageBackend, sendChatMessageBackend } from '../services/backendApi';
 import Markdown from 'react-markdown';
 import { useTypingEffect } from '../hooks/useTypingEffect';
@@ -592,7 +603,25 @@ function AIAnalysisChat() {
   } = useAnalysisContext();
 
   const { displayedText, isTyping } = useTypingEffect(initialMessage, { typingSpeed: 25 });
-  const [selectedModel, setSelectedModel] = useState<ModelId>(AVAILABLE_MODELS[0].id);
+  const [models, setModels] = useState<Model[]>([]);
+const [selectedModel, setSelectedModel] = useState<string>('');
+
+// Fetch models from backend on mount
+useEffect(() => {
+  async function fetchModels() {
+    try {
+      const fetchedModels = await getAvailableModels();
+      const typedModels = fetchedModels as Model[];
+      setModels(typedModels);
+      if (typedModels.length > 0) {
+        setSelectedModel(typedModels[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to fetch models:', error);
+    }
+  }
+  fetchModels();
+}, []);
   
   // Track model-specific conversations and analysis
   const [modelConversations, setModelConversations] = useState<Record<string, {
@@ -601,8 +630,8 @@ function AIAnalysisChat() {
     chartPreviews: string[];
   }>>({});
 
-  const premiumModels = AVAILABLE_MODELS.filter(model => model.premium);
-  const nonPremiumModels = AVAILABLE_MODELS.filter(model => !model.premium);
+  const premiumModels = models.filter(model => model.premium);
+  const nonPremiumModels = models.filter(model => !model.premium);
 
   const [analysisType, setAnalysisType] = useState<typeof AnalysisType[AnalysisTypeKey]>(AnalysisType.Fundamental);
   const [isGeneratingChart, setIsGeneratingChart] = useState(false);
@@ -1546,7 +1575,9 @@ function AIAnalysisChat() {
         role: 'assistant',
         content: initialMessage
       }]);
-      setSelectedModel(AVAILABLE_MODELS[0].id);
+      if (models.length > 0) {
+        setSelectedModel(models[0].id);
+      }
       setAnalysisType(AnalysisType.Fundamental);
       setImage(null);
       setPendingImages([]);
@@ -1938,7 +1969,7 @@ function AIAnalysisChat() {
                 <MessageSquare className="w-5 h-5" /> AI Analysis Chat
               </h3>
               <div className="flex items-center">
-                <span className="text-xs mr-2 silver-text">Selected: {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name}</span>
+                <span className="text-xs mr-2 silver-text">Selected: {models.find(m => m.id === selectedModel)?.name}</span>
               </div>
             </div>
             <div className="flex items-center justify-center w-full">
@@ -2163,7 +2194,7 @@ function AIAnalysisChat() {
                   <span className="text-sm silver-text truncate max-w-[150px] xl:max-w-[200px]">
                     <span className="whitespace-nowrap">Selected: </span>
                     <span className="silver-text font-medium">
-                      {AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || selectedModel}
+                      {models.find(m => m.id === selectedModel)?.name || selectedModel}
                     </span>
                   </span>
                 </div>
@@ -2172,7 +2203,7 @@ function AIAnalysisChat() {
                 <select 
                   value={selectedModel} 
                   onChange={(e) => {
-                    const newModel = e.target.value as ModelId;
+                    const newModel = e.target.value as string;
                     
                     // Save current state for the current model
                     setModelConversations(prev => ({

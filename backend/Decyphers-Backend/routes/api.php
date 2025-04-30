@@ -27,3 +27,6 @@ Route::post('/openrouter/calculate-cost', [\App\Http\Controllers\OpenRouterContr
 
 });
 
+// Model endpoints
+Route::get('/models', [\App\Http\Controllers\ModelController::class, 'getAvailableModels']);
+Route::post('/model-cost', [\App\Http\Controllers\ModelController::class, 'calculateTokenCost']);

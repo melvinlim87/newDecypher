@@ -11,8 +11,7 @@ import {
 import { ImageUploader } from '../components/ImageUploader';
 import { ModelSelector } from '../components/ModelSelector';
 import { Button } from '../components/Button';
-import { AVAILABLE_MODELS, type ModelId } from '../services/modelUtils';
-import { analyzeImageBackend } from '../services/backendApi';
+import { analyzeImageBackend, getAvailableModels } from '../services/backendApi';
 import { ComprehensiveAnalyzer } from './ComprehensiveAnalyzer';
 
 export function Analyzer() {
@@ -22,7 +21,24 @@ export function Analyzer() {
   const [timeframe, setTimeframe] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [selectedModel, setSelectedModel] = useState<ModelId>(AVAILABLE_MODELS[0].id);
+  const [models, setModels] = useState<any[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
+
+  useEffect(() => {
+    async function fetchModels() {
+      try {
+        const fetchedModels = await getAvailableModels();
+        const typedModels = fetchedModels as { id: string; name: string; premium?: boolean }[];
+        setModels(typedModels);
+        if (typedModels.length > 0) {
+          setSelectedModel(typedModels[0].id);
+        }
+      } catch (error) {
+        console.error('Failed to fetch models:', error);
+      }
+    }
+    fetchModels();
+  }, []);
   const [currentAnalysisModel, setCurrentAnalysisModel] = useState<string | null>(null);
   const [activeAnalyzer, setActiveAnalyzer] = useState<'ai' | 'comprehensive'>('ai');
 
@@ -54,7 +70,7 @@ export function Analyzer() {
     setIsLoading(true);
     setTimeframe(null);
     setError(null);
-    setCurrentAnalysisModel(AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || null);
+    setCurrentAnalysisModel(models.find(m => m.id === selectedModel)?.name || null);
 
     try {
       const result = await analyzeImageBackend(url, selectedModel);
@@ -84,7 +100,7 @@ export function Analyzer() {
     setIsLoading(true);
     setTimeframe(null);
     setError(null);
-    setCurrentAnalysisModel(AVAILABLE_MODELS.find(m => m.id === selectedModel)?.name || null);
+    setCurrentAnalysisModel(models.find(m => m.id === selectedModel)?.name || null);
 
     try {
       // Analyze all images
@@ -135,7 +151,7 @@ export function Analyzer() {
     }
   };
 
-  const handleModelSelect = async (modelId: ModelId) => {
+  const handleModelSelect = async (modelId: string) => {
     setSelectedModel(modelId);
   };
 
@@ -602,10 +618,11 @@ export function Analyzer() {
                   <div className="mb-4">
                     <h3 className="text-sm font-medium text-indigo-200 mb-2">Select Model</h3>
                     <ModelSelector
-                      selectedModel={selectedModel}
-                      onModelSelect={handleModelSelect}
-                      disabled={isLoading}
-                    />
+  models={models}
+  selectedModel={selectedModel}
+  onModelSelect={handleModelSelect}
+  disabled={isLoading}
+/>
                   </div>
                   <ImageUploader onImageSelect={handleImageSelect} isLoading={isLoading} />
                   {images.length > 0 && (
