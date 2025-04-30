@@ -31,6 +31,12 @@ class FirebaseAuthController extends Controller
             $email = $verifiedIdToken->claims()->get('email');
             $name = $verifiedIdToken->claims()->get('name', $email);
 
+            // Debug log for Firebase UID and claims
+            \Log::info('Firebase UID Debug', [
+                'firebaseUid' => $firebaseUid,
+                'claims' => $verifiedIdToken->claims()->all(),
+            ]);
+
             // Find or create user
             $user = User::firstOrCreate(
                 ['firebase_uid' => $firebaseUid],
