@@ -198,8 +198,23 @@ export function AuthForm({ type }: AuthFormProps) {
         }
         navigate('/');
       } else {
-        await signInWithEmailAndPassword(auth, email, password);
-        navigate('/');
+        // 1. Sign in with Firebase
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        // 2. Get Firebase ID token
+        const idToken = await userCredential.user.getIdToken();
+        // 3. Exchange for Sanctum token
+        const res = await fetch('http://localhost:8000/api/firebase-login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ idToken }),
+        });
+        const data = await res.json();
+        if (data.access_token) {
+          localStorage.setItem('sanctum_token', data.access_token);
+          navigate('/');
+        } else {
+          setError('Failed to authenticate with backend.');
+        }
       }
     } catch (err) {
       console.error('Auth error:', err);
@@ -696,7 +711,7 @@ export function AuthForm({ type }: AuthFormProps) {
             </div>
           </div>
         </form>
-      <style jsx>{`
+      <style>{`
         .telegram-button-container {
           display: flex;
           justify-content: center;
