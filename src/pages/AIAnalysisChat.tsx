@@ -672,7 +672,7 @@ useEffect(() => {
   useEffect(() => {
     if (historyId) {
       sessionStorage.setItem('currentHistoryId', historyId);
-      console.log('History ID saved to sessionStorage:', historyId);
+      
       
       // Also update the model-specific history ID mapping
       setModelHistoryIds(prev => ({
@@ -700,11 +700,11 @@ useEffect(() => {
     // Skip if we've already loaded or there's no location state
     if (!location.state) return;
     
-    console.log('AIAnalysisChat mounted with state:', location.state);
+  
     
     // Set the analysis content if available
     if (location.state.content && typeof location.state.content === 'string') {
-      console.log('Setting analysis content from location state');
+    
       hasLoadedAnalysisRef.current = true;
       
       try {
@@ -716,21 +716,21 @@ useEffect(() => {
         }
       } catch (e) {
         // If parsing fails, it's a plain text analysis
-        console.log('Content is not JSON, setting as analysis');
+        
         setAnalysis(location.state.content);
       }
     }
     
     // First priority: Check for messages array in state
     if (location.state.messages && Array.isArray(location.state.messages)) {
-      console.log('Loading previous analysis conversation from messages array:', location.state.messages);
+      
       
       // If loading from history, set the history ID
       if (location.state.analysisId) {
-        console.log('Setting historyId from location state:', location.state.analysisId);
+       
         setHistoryId(location.state.analysisId);
       } else if (location.state.historyId) {
-        console.log('Setting historyId from location state:', location.state.historyId);
+        
         setHistoryId(location.state.historyId);
       }
       
@@ -746,7 +746,7 @@ useEffect(() => {
           isTyping: false
         }));
         
-        console.log('Setting messages:', loadedMessages);
+      
         setMessages(loadedMessages);
         
         // Extract analysis from the last assistant message if we haven't already loaded it
@@ -756,7 +756,7 @@ useEffect(() => {
             .pop();
             
           if (lastAssistantMsg && lastAssistantMsg.content) {
-            console.log('Setting analysis from last assistant message');
+           
             setAnalysis(lastAssistantMsg.content);
             hasLoadedAnalysisRef.current = true;
           }
@@ -765,7 +765,7 @@ useEffect(() => {
     }
     // Second priority: Try to parse content as JSON
     else if ((location.state.analysisId || location.state.historyId) && location.state.content) {
-      console.log('Loading from history with content:', location.state.content);
+   
       
       // Set the history ID
       if (location.state.analysisId) {
@@ -789,7 +789,7 @@ useEffect(() => {
               isTyping: false
             }));
             
-            console.log('Setting parsed messages:', loadedMessages);
+           
             setMessages(loadedMessages);
             
             // Extract analysis from the last assistant message if we haven't already loaded it
@@ -799,7 +799,7 @@ useEffect(() => {
                 .pop();
                 
               if (lastAssistantMsg && lastAssistantMsg.content) {
-                console.log('Setting analysis from last assistant message');
+                
                 setAnalysis(lastAssistantMsg.content);
                 hasLoadedAnalysisRef.current = true;
               }
@@ -819,7 +819,7 @@ useEffect(() => {
           }
         }
       } catch (e) {
-        console.log('Error parsing content, treating as plain text');
+       
         // If content is not JSON, create a new conversation with it as assistant message
         setMessages([
           { role: 'assistant', content: initialMessage },
@@ -836,7 +836,7 @@ useEffect(() => {
     
     // Handle chat history (for backward compatibility)
     if (location.state.chatHistory && !location.state.messages) {
-      console.log('Loading chat history from location state:', location.state.chatHistory);
+      
       setChatHistory(location.state.chatHistory);
       
       // Only set messages if we haven't already set them above
@@ -845,7 +845,7 @@ useEffect(() => {
         (location.state.analysisId || location.state.historyId) && location.state.content;
       
       if (Array.isArray(location.state.chatHistory) && !hasSetMessages) {
-        console.log('Setting messages from chatHistory');
+       
         setMessages(location.state.chatHistory);
         
         // Extract analysis from the last assistant message if we haven't already loaded it
@@ -855,7 +855,6 @@ useEffect(() => {
             .pop();
             
           if (lastAssistantMsg && lastAssistantMsg.content) {
-            console.log('Setting analysis from last assistant message');
             setAnalysis(lastAssistantMsg.content);
             hasLoadedAnalysisRef.current = true;
           }
@@ -865,19 +864,16 @@ useEffect(() => {
     
     // Set chart previews if available
     if (location.state.chartUrls && Array.isArray(location.state.chartUrls)) {
-      console.log('Setting chart previews from location state');
       setChartPreviews(location.state.chartUrls);
     }
     
     // Set timeframe if available
     if (location.state.timeframe) {
-      console.log('Setting timeframe from location state');
       setTimeframe(location.state.timeframe);
     }
     
     // Set model if available
     if (location.state.model) {
-      console.log('Setting model from location state:', location.state.model);
       setSelectedModel(location.state.model);
     }
   }, [location.state, initialMessage]);
@@ -1012,7 +1008,6 @@ useEffect(() => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file.type.startsWith('image/')) {
-          console.log('Skipping non-image file:', file.name);
           continue;
         }
 
@@ -1043,7 +1038,6 @@ useEffect(() => {
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
         if (!file.type.startsWith('image/')) {
-          console.log('Skipping non-image file:', file.name);
           continue;
         }
 
@@ -1078,26 +1072,21 @@ useEffect(() => {
   };
 
   const handleFinishUploading = async () => {
-    console.log('Starting upload and analysis process...');
     setShowUploadPrompt(false);
     setIsAnalyzing(true);
     setTotalCharts(chartPreviews.length);
     setCurrentChart(0);
 
     try {
-      console.log(`Starting analysis of ${chartPreviews.length} charts...`);
       
       const analysisBySymbol: Record<string, { symbol: string; timeframes: string[]; analyses: string[] }> = {};
 
       // Analyze all charts
       for (let i = 0; i < chartPreviews.length; i++) {
-        console.log(`Analyzing chart ${i + 1} of ${chartPreviews.length}`);
         setCurrentChart(i + 1);
         const imageUrl = chartPreviews[i];
-        console.log('Starting image analysis...');
         // Call backend API instead of direct OpenRouter
       const result = await analyzeImageBackend(imageUrl, selectedModel);
-        console.log('Image analysis complete. Result:', result.substring(0, 100) + '...');
 
         // Extract symbol and timeframe using regex
         const symbolMatch = result.match(/Symbol:\s*([^\n|]+)/i);
@@ -1139,11 +1128,11 @@ useEffect(() => {
         
         // If we have multiple analyses for the same symbol, request a combined analysis
         if (analyses.length > 1) {
-          console.log(`Requesting combined analysis for symbol: ${symbol}...`);
+          
           const combinedPrompt = `Please provide a combined market analysis for the symbol: ${symbol} across timeframes: ${timeframes.join(', ')}. Here are the individual analyses to combine:\n\n${combinedAnalysis}`;
           
           const combinedResult = await analyzeImage(chartPreviews[0], selectedModel, combinedPrompt);
-          console.log('Combined analysis received:', combinedResult.substring(0, 100) + '...');
+        
           combinedAnalysis = combinedResult
             .replace(/Symbol:.*\n?/i, '')
             .replace(/Timeframe:.*\n?/i, '')
@@ -1175,35 +1164,23 @@ useEffect(() => {
         setAnalysis(finalAnalysisResults[0].analysis);
       }
       
-      console.log('All charts analyzed successfully');
-
       // Upload analyzed charts to Firebase if user is authenticated
       const user = auth.currentUser;
-      console.log('👤 User authentication status:', { 
-        isAuthenticated: !!user,
-        userId: user?.uid 
-      });
 
       const firebaseUrls: string[] = [];
       if (user) {
-        console.log('🚀 Starting Firebase upload for analyzed charts...');
+        
         for (let i = 0; i <chartPreviews.length; i++) {
           try {
             // Convert base64 to blob
-            console.log(`📷 Processing chart ${i + 1}/${chartPreviews.length}...`);
+            
             const response = await fetch(chartPreviews[i]);
             const blob = await response.blob();
-            console.log('✅ Blob created:', { 
-              size: blob.size, 
-              type: blob.type 
-            });
+            
 
             // Upload to Firebase
             const imageUrl = await uploadChartImage(user.uid, blob);
-            console.log('✅ Chart uploaded successfully:', {
-              url: imageUrl.substring(0, 50) + '...',
-              chartIndex: i + 1
-            });
+           
             firebaseUrls.push(imageUrl);
           } catch (error) {
             console.error('❌ Firebase upload failed for chart ${i + 1}:', error);
@@ -1211,26 +1188,19 @@ useEffect(() => {
             firebaseUrls.push(chartPreviews[i]);
           }
         }
-        console.log('📊 All charts processed. Success rate:', 
-          `${firebaseUrls.filter(url => url.includes('firebasestorage')).length}/${chartPreviews.length}`
-        );
+        
 
         // Use Firebase URLs if available, otherwise use original previews
         const finalChartUrls = firebaseUrls;
 
         // Save analysis data to Firebase
-        console.log('Saving analysis data to Firebase:', {
-          analysisLength: finalAnalysisResults[0]?.analysis.length,
-          timeframe: finalAnalysisResults[0]?.timeframe,
-          chartCount: finalChartUrls.length,
-          messageCount: messages.length
-        });
+        
         
         try {
           // If we already have a history ID, update the existing record
           if (historyId && auth.currentUser) {
             try {
-              console.log('Updating existing history record with analysis:', historyId);
+           
               
               const { ref, update } = await import('firebase/database');
               const historyRef = ref(database, `users/${auth.currentUser.uid}/history/${historyId}`);
@@ -1248,7 +1218,7 @@ useEffect(() => {
                 model: selectedModel
               });
               
-              console.log('Existing history record updated with analysis');
+            
             } catch (error) {
               console.error('Error updating history with analysis:', error);
             }
@@ -1270,15 +1240,12 @@ useEffect(() => {
             // Store the analysis ID for future use
             if (savedAnalysisId) {
               setHistoryId(savedAnalysisId);
-              console.log('New history record created with ID:', savedAnalysisId);
             }
           }
-          console.log('All analyses saved successfully');
         } catch (err) {
           console.error('Error saving analysis:', err);
         }
       }
-      console.log('Process complete.');
     } catch (error) {
       console.error('Analysis failed:', error);
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
@@ -1341,7 +1308,7 @@ useEffect(() => {
       }
     });
     
-    console.log('Analysis cleared completely, history ID reset');
+    
   };
 
   const handleNewConversation = () => {
@@ -1421,11 +1388,7 @@ useEffect(() => {
       // Save the updated chat history if a user is logged in
       if (auth.currentUser) {
         try {
-          console.log('Preparing to save chat messages to Firebase:', {
-            messageCount: updatedMessages.length,
-            hasAnalysis: !!analysis,
-            hasHistoryId: !!historyId
-          });
+          
           
           // Ensure messages are properly formatted for Firebase
           const cleanMessages = updatedMessages.map(msg => ({
@@ -1439,7 +1402,6 @@ useEffect(() => {
           
           // If we have an existing history ID, update it
           if (historyId) {
-            console.log('Updating existing chat history with ID:', historyId);
             
             const historyRef = ref(database, `users/${auth.currentUser.uid}/history/${historyId}`);
             
@@ -1449,11 +1411,9 @@ useEffect(() => {
               model: selectedModel
             });
             
-            console.log('Existing chat history updated successfully');
           } 
           // If we don't have a history ID yet, create a new one
           else {
-            console.log('Creating new history record for chat');
             
             // Create a new entry
             const newHistoryRef = push(ref(database, `users/${auth.currentUser.uid}/history`));
@@ -1471,7 +1431,6 @@ useEffect(() => {
             // Store the new history ID
             if (newHistoryRef.key) {
               setHistoryId(newHistoryRef.key);
-              console.log('New history record created with ID:', newHistoryRef.key);
             }
           }
         } catch (error) {
@@ -1505,7 +1464,6 @@ useEffect(() => {
   useEffect(() => {
     if (historyId) {
       sessionStorage.setItem('currentHistoryId', historyId);
-      console.log('History ID saved to sessionStorage:', historyId);
     }
   }, [historyId]);
 
@@ -1568,7 +1526,7 @@ useEffect(() => {
 
   useEffect(() => {
     if (location.state?.newSession) {
-      console.log('Starting new Analysis session');
+  
       
       // Reset all state variables to their initial values
       setMessages([{
@@ -1598,7 +1556,7 @@ useEffect(() => {
     // Also reset model-specific history IDs and conversations
     setModelHistoryIds({});
     setModelConversations({});
-    console.log('History ID reset for new conversation');
+   
   };
 
   const [isLowCreditModalOpen, setIsLowCreditModalOpen] = useState(false);

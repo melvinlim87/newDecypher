@@ -105,7 +105,7 @@ export function EAGenerator() {
   // Dedicated effect for model selection that runs after component mount
   useEffect(() => {
     if (location.state?.model) {
-      console.log('MODEL SELECTION EFFECT - Setting model from location state:', location.state.model);
+      
       // Use a timeout to ensure this runs after the component is fully mounted
       setTimeout(() => {
         setSelectedModel(location.state.model);
@@ -115,11 +115,10 @@ export function EAGenerator() {
 
    // Load previous conversation if available
    useEffect(() => {
-     console.log('EAGenerator mounted with state:', state);
+     
      
      // If this is a new session, reset everything
      if (state?.newSession) {
-       console.log('Starting new EA Generator session');
        setMessages([{
          role: 'assistant',
          content: `Welcome! I'm ready to help you create your Expert Advisor.\n\nLet me help you develop a complete trading strategy. Please provide details about:\n\n1. INDICATOR SETTINGS\n   - Which indicators do you want to use?\n   - Specific periods and parameters?\n\n2. ENTRY RULES\n   - What conditions trigger a buy/sell?\n   - Required confirmations?\n   - Specific price patterns?\n\n3. EXIT RULES\n   - Take profit targets?\n   - Stop loss placement?\n   - Trailing stop rules?\n\n4. RISK MANAGEMENT\n   - Risk per trade?\n   - Trading sessions?\n   - Maximum spread?\n\nExample: "I want to trade using 20 EMA and 50 SMA with RSI(14). Buy when EMA crosses above SMA and RSI > 40. Sell when EMA crosses below SMA and RSI < 60. Use 2% risk per trade, 50 pip SL, 100 pip TP. Only trade during London/NY overlap with max 5 pip spread."`,
@@ -226,7 +225,7 @@ export function EAGenerator() {
  
    // Add this effect to log messages changes (for debugging)
    useEffect(() => {
-     console.log('Messages updated:', messages.length, 'messages');
+     
    }, [messages]);
  
    useEffect(() => {
@@ -248,11 +247,7 @@ export function EAGenerator() {
    // Save message history when messages change
    useEffect(() => {
      const saveHistory = async () => {
-       console.log('Attempting to save history:', {
-         messageCount: messages.length,
-         currentHistoryId,
-         hasUser: !!auth.currentUser
-       });
+       
  
        // Skip if we only have the welcome message
        if (messages.length <= 1) return;
@@ -260,34 +255,18 @@ export function EAGenerator() {
        const lastMessage = messages[messages.length - 1];
        const secondLastMessage = messages[messages.length - 2];
  
-       console.log('Last messages:', {
-         lastMessage: {
-           role: lastMessage?.role,
-           contentLength: lastMessage?.content.length
-         },
-         secondLastMessage: {
-           role: secondLastMessage?.role,
-           contentLength: secondLastMessage?.content.length
-         }
-       });
+       
        
        const user = auth.currentUser;
        if (!user) {
-         console.log('No authenticated user, skipping save');
          return;
        }
  
        // Extract title from the conversation
        const title = extractTitle(messages);
-       console.log('Generated title:', title);
  
        try {
          // Save or update history in Firebase
-         console.log('Saving to Firebase:', {
-           messageCount: messages.length,
-           historyId: currentHistoryId,
-           title
-         });
  
          const historyId = await saveEAHistory(user.uid, {
            messages,
@@ -297,11 +276,9 @@ export function EAGenerator() {
            model: selectedModel // Include the selected model
          });
  
-         console.log('Save successful:', { newHistoryId: historyId });
          
          // Update current history ID if this is a new conversation
          if (!currentHistoryId && historyId) {
-           console.log('Setting new history ID:', historyId);
            setCurrentHistoryId(historyId);
          }
        } catch (error) {
@@ -633,7 +610,6 @@ export function EAGenerator() {
      
      // If we have a history ID, update the model in history
      if (currentHistoryId && auth.currentUser) {
-       console.log('Updating model in history:', newModel);
        // Save the current conversation with the new model
        saveEAHistory(auth.currentUser.uid, {
          messages,
@@ -641,8 +617,6 @@ export function EAGenerator() {
          title: extractTitle(messages),
          historyId: currentHistoryId,
          model: newModel // Update the model in history
-       }).then(() => {
-         console.log('Model updated in history successfully');
        }).catch(error => {
          console.error('Error updating model in history:', error);
        });

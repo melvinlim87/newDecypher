@@ -181,7 +181,7 @@ export const AnalysisProvider: React.FC<{ children: ReactNode }> = ({ children }
     sessionStorage.removeItem('chartPreviews');
     sessionStorage.removeItem('currentHistoryId');
     
-    console.log('Analysis state and sessionStorage cleared');
+    
   };
 
   return (

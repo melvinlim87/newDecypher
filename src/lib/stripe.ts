@@ -22,9 +22,7 @@ const CUSTOMER_COST_PER_1K = AVG_BLENDED_COST * PROFIT_MULTIPLIER; // $0.10 per 
 // Tokens per dollar calculation - adjusted to match $10 = 6667 tokens
 const TOKENS_PER_DOLLAR = 667; // ~667 tokens per $1
 
-console.log('Base cost (OpenRouter):', AVG_BLENDED_COST, 'per 1K tokens');
-console.log('Customer cost (10x profit):', CUSTOMER_COST_PER_1K, 'per 1K tokens');
-console.log('Tokens per dollar:', TOKENS_PER_DOLLAR);
+
 
 // Calculate package prices with minimum of $10
 export const STRIPE_PRICES = {
@@ -49,11 +47,7 @@ export const STRIPE_PRICES = {
 } as const;
 
 // Log the actual calculated packages
-console.log('Package prices:', {
-  BASIC: { price: STRIPE_PRICES.BASIC.price, tokens: STRIPE_PRICES.BASIC.tokens },
-  STANDARD: { price: STRIPE_PRICES.STANDARD.price, tokens: STRIPE_PRICES.STANDARD.tokens },
-  PREMIUM: { price: STRIPE_PRICES.PREMIUM.price, tokens: STRIPE_PRICES.PREMIUM.tokens }
-});
+
 
 export type TokenPackage = keyof typeof STRIPE_PRICES;
 

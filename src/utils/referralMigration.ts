@@ -28,7 +28,7 @@ export async function migrateUserReferralCode(
     const snapshot = await get(userRef);
     
     if (!snapshot.exists()) {
-      console.log(`No user data found for ID: ${uid}`);
+     
       return null;
     }
     
@@ -43,7 +43,7 @@ export async function migrateUserReferralCode(
     
     // Only migrate if the code appears to be UID-based and not already name-based
     if (currentCode && codeAppearsToBeUIDBasedFormat && !codeAppearsToBeName) {
-      console.log(`Migrating referral code for user: ${uid}, current code: ${currentCode}`);
+     
       
       // Generate new name-based code
       const newReferralCode = await generateUniqueReferralCode(userName, uid);
@@ -54,7 +54,7 @@ export async function migrateUserReferralCode(
         updatedAt: new Date().toISOString()
       });
       
-      console.log(`Successfully migrated referral code from ${currentCode} to ${newReferralCode}`);
+      // console.log removed: `Successfully migrated referral code from ${currentCode} to ${newReferralCode}`);
       
       // Report progress if callback provided
       if (progressCallback) {
@@ -63,7 +63,7 @@ export async function migrateUserReferralCode(
       
       return newReferralCode;
     } else {
-      console.log(`User ${uid} already has a proper name-based code or no code to migrate`);
+      // console.log removed: `User ${uid} already has a proper name-based code or no code to migrate`);
       return null;
     }
   } catch (error) {
@@ -79,7 +79,7 @@ export async function migrateUserReferralCode(
 export async function migrateCurrentUserReferralCode(): Promise<string | null> {
   try {
     if (!auth.currentUser) {
-      console.log('No logged-in user to migrate');
+      // console.log removed: 'No logged-in user to migrate');
       return null;
     }
     
@@ -104,13 +104,13 @@ export async function migrateAllUserReferralCodes(
     const snapshot = await get(usersQuery);
     
     if (!snapshot.exists()) {
-      console.log('No users found to migrate');
+      // console.log removed: 'No users found to migrate');
       return;
     }
     
     const users = snapshot.val();
     const userIds = Object.keys(users);
-    console.log(`Found ${userIds.length} users to check for migration`);
+    // console.log removed: `Found ${userIds.length} users to check for migration`);
     
     // Process each user sequentially to avoid overwhelming database
     let processedCount = 0;
@@ -128,7 +128,7 @@ export async function migrateAllUserReferralCodes(
       }
     }
     
-    console.log('Completed migration process for all users');
+    // console.log removed: 'Completed migration process for all users');
   } catch (error) {
     console.error('Error migrating all user referral codes:', error);
     throw error; // Re-throw to let caller handle the error

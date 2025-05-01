@@ -39,6 +39,8 @@ const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 const telegramBotName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'LazeAIMarketAnalyzerBot';
 
 export function AuthForm({ type }: AuthFormProps) {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
@@ -49,10 +51,9 @@ export function AuthForm({ type }: AuthFormProps) {
   const [success, setSuccess] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
   const [resetSent, setResetSent] = useState(false);
-  const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
-  console.log('Referral code from URL:', referralCode);
+  
   const { theme } = useTheme();
 
   useEffect(() => {
@@ -77,14 +78,6 @@ export function AuthForm({ type }: AuthFormProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [type]);
-
-  useEffect(() => {
-    let mounted = true;
-
-    return () => {
-      mounted = false;
-    };
-  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,12 +1,27 @@
+import React from 'react';
 import { AuthForm } from '../components/AuthForm';
+import { useFirebaseAuth } from '../hooks/useFirebaseAuth';
+import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
 import { useTheme } from '../contexts/ThemeContext';
 import { ParticleBackground } from '../components/ParticleBackground';
 import { VerticalCircuitLines } from '../components/VerticalCircuitLines';
 
 export function Login() {
+  const { user, authLoading } = useFirebaseAuth();
+  const navigate = useNavigate();
   const { theme } = useTheme();
-  
+
+  React.useEffect(() => {
+    if (user) {
+      navigate('/');
+    }
+  }, [user, navigate]);
+
+  if (authLoading || user) {
+    return <div className="flex items-center justify-center min-h-screen text-white">Loading...</div>;
+  }
+
   return (
       <div
         className="min-h-screen w-full flex flex-col items-center justify-center p-0 m-0 text-white overflow-hidden relative"
@@ -40,7 +55,7 @@ export function Login() {
             }}>
             <AuthForm type="login" />
           </div>
-         <p className="mt-8 text-white text-center">
+          <p className="mt-8 text-white text-center">
             <span style={{ fontSize: 'calc(1rem + 3px)', color: 'white' }}>Don't have an account?{' '}</span>
             <Link
               to="/register"
@@ -54,6 +69,6 @@ export function Login() {
             </Link>
           </p>
         </div>
-      </div>
+    </div>
   );
 }
