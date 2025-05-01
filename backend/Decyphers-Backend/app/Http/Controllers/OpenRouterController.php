@@ -294,6 +294,26 @@ EOT;
         $analysisType = $request->input('analysisType', 'Technical');
         $chartAnalysis = $request->input('chartAnalysis', null);
 
+        // Debug log incoming payload
+        \Log::info('Incoming sendChatMessage payload', [
+            'modelId' => $modelId,
+            'messages' => $messages,
+            'analysisType' => $analysisType,
+            'chartAnalysis' => $chartAnalysis
+        ]);
+
+        // Defensive validation
+        if (!is_array($messages) || empty($messages)) {
+            \Log::warning('sendChatMessage: messages is not a non-empty array', ['messages' => $messages]);
+            return response()->json(['error' => 'Messages must be a non-empty array.'], 400);
+        }
+        foreach ($messages as $msg) {
+            if (!isset($msg['role'], $msg['content']) || !$msg['role'] || !$msg['content']) {
+                \Log::warning('sendChatMessage: invalid message object', ['msg' => $msg]);
+                return response()->json(['error' => 'Each message must have non-empty role and content.'], 400);
+            }
+        }
+
         // Compose message structure
         $payload = [
             'model' => $modelId,

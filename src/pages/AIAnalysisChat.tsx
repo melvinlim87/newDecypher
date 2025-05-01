@@ -1361,12 +1361,18 @@ useEffect(() => {
       // Add assistant typing indicator
       setMessages(prev => [...prev, { role: 'assistant', content: '', isTyping: true }]);
       
-      // Send message to API - filter out any analysis messages to avoid confusion
-      const messagesToSend = messages
-        .filter(msg => msg.content !== analysis)
-        .concat([{ role: 'user', content: userMessage }]);
-      
-      // Call backend API instead of direct OpenRouter
+      // Prepare messages for backend: only {role, content}, no isTyping, no filtering
+      const messagesToSend = [
+        ...messages.filter(msg => msg.role && msg.content && !msg.isTyping).map(msg => ({ role: msg.role, content: msg.content })),
+        { role: 'user', content: userMessage }
+      ];
+
+      // Defensive: never send empty array
+      if (messagesToSend.length === 0) {
+        messagesToSend.push({ role: 'user', content: userMessage });
+      }
+
+      // Call backend API
       const response = await sendChatMessageBackend(
         messagesToSend,
         selectedModel,
@@ -1377,10 +1383,12 @@ useEffect(() => {
       setChatHistory(prev => [...prev, userMessage, response]);
       
       // Remove typing indicator and add actual response
+      // Ensure assistant response is always a string
+      const assistantReply = typeof response === 'string' ? response : (response.reply || response.content || JSON.stringify(response));
       const updatedMessages = [
         ...messages.filter(msg => !msg.isTyping),
         { role: 'user', content: userMessage },
-        { role: 'assistant', content: response }
+        { role: 'assistant', content: assistantReply }
       ];
       
       setMessages(updatedMessages);
