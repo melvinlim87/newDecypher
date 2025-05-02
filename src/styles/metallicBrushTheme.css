@@ -119,6 +119,14 @@
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
 
+.metallic-brush-left-panel {
+  background-color: rgba(30, 41, 59, 0.8);
+  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  background-blend-mode: overlay;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  border-bottom: 1px solid var(--silver-card-border);
+}
+
 .metallic-brush-main-title {
   display: flex;
   align-items: center;
@@ -191,8 +199,8 @@
   display: flex;
   flex-direction: column;
   background-color: rgba(5, 10, 20, 0.98);
-  background-image: var(--enhanced-metallic-texture), var(--blue-gradient);
-  background-blend-mode: overlay, normal;
+  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  background-blend-mode: overlay;
   border-radius: 0.5rem;
   border: 1px solid var(--blue-card-border);
   padding: 1.5rem;
@@ -350,15 +358,15 @@
   flex: 4; /* 40% width */
   display: flex;
   flex-direction: column;
-  overflow: hidden;
-  background-color: rgba(40, 40, 45, 0.9);
-  background-image: var(--enhanced-metallic-texture), var(--silvery-panel-bg);
+  background-color: rgba(5, 10, 20, 0.98);
+  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
   background-blend-mode: overlay;
-  border-radius: 8px;
+  border-radius: 0.5rem;
+  border: 1px solid var(--blue-card-border);
   padding: 1.5rem;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1), var(--silver-premium-glow), inset 0 0 20px rgba(220, 220, 230, 0.05);
-  border: 1px solid rgba(180, 180, 190, 0.2);
+  box-shadow: var(--blue-border-glow), inset 0 0 30px rgba(29, 78, 216, 0.15);
   position: relative;
+  overflow: hidden;
 }
 
 .metallic-brush-right-panel::before {

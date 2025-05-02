@@ -103,7 +103,7 @@ export function Layout({ children }: LayoutProps) {
         
         {/* Main content with scrolling */}
         <main 
-          className={`flex-1 overflow-y-auto scrollbar-hide ${user ? (isCollapsed ? 'px-4 md:px-8 lg:px-12' : 'px-4 md:px-8 lg:px-12') : 'px-4 md:px-8 lg:px-12'}`}
+          className={`flex-1 overflow-y-auto scrollbar-hide `}
           style={{ zIndex: 10 }}
         >
           <div className="w-full min-h-full">
