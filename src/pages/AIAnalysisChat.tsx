@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck } from 'lucide-react';
 import '../styles/metallicBrushTheme.css';
+import { getOrCreateChatSession, sendMessage, subscribeToMessages, ChatMessage } from '../lib/chat';
 
 // Removed sidebar mock data as it's no longer needed
 
@@ -18,58 +19,51 @@ const supportedIndicators = [
   'Moving Average Convergence Divergence (MACD)'
 ];
 
-interface Message {
-  role: 'user' | 'assistant';
-  content: string;
-}
+
 
 const MetallicBrushAnalyzerUI: React.FC = () => {
-  const [messages, setMessages] = useState<Message[]>([]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  // Model displayed in the UI - used in the JSX below
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const selectedModel = 'GPT-4o';
-  // Always visible now that we removed the close button
   const [isUploading, setIsUploading] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<string | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize with welcome message
+  // Initialize chat session and subscribe to messages
   useEffect(() => {
-    setMessages([
-      {
-        role: 'assistant' as const,
-        content: "Hello! I can help you analyze market conditions and trading opportunities. Select an AI model and analysis type to begin."
-      }
-    ]);
+    let unsubscribe: (() => void) | null = null;
+    getOrCreateChatSession().then((id) => {
+      setSessionId(id);
+      unsubscribe = subscribeToMessages(id, (msgs) => {
+        setMessages(msgs);
+        // Scroll to bottom on new message
+        setTimeout(() => {
+          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }, 100);
+      });
+    });
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
-  const handleSendMessage = () => {
-    if (!inputMessage.trim()) return;
-
-    // Add user message
-    const newMessages = [...messages, { role: 'user' as const, content: inputMessage }];
-    setMessages(newMessages);
-    setInputMessage('');
-
-    // Simulate AI response after a delay
-    setTimeout(() => {
-      setMessages([
-        ...newMessages,
-        {
-          role: 'assistant' as const,
-          content: "I'll analyze that for you. Based on the current market conditions, we're seeing a bullish trend with strong support at the $45.70 level. The RSI is at 65, indicating moderate bullish momentum, while the MACD is showing a positive divergence. Would you like me to provide more specific details about any particular indicator?"
-        }
-      ]);
-    }, 1500);
+  const handleSendMessage = async () => {
+    if (!inputMessage.trim() || !sessionId) return;
+    setIsLoading(true);
+    try {
+      await sendMessage(sessionId, inputMessage);
+      setInputMessage('');
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleNewConversation = () => {
-    setMessages([
-      {
-        role: 'assistant' as const,
-        content: "Hello! I can help you analyze market conditions and trading opportunities. Select an AI model and analysis type to begin."
-      }
-    ]);
-    setAnalysisResults(null);
+    window.location.reload(); // Simple way to reset session and state
   };
 
   const handleUploadChart = () => {
@@ -287,12 +281,13 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
             <div className="metallic-brush-chat-messages">
               {messages.map((message, index) => (
                 <div 
-                  key={index} 
-                  className={`metallic-brush-message ${message.role}`}
+                  key={message.id || index} 
+                  className={`metallic-brush-message ${message.sender}`}
                 >
-                  {message.content}
+                  {message.text}
                 </div>
               ))}
+              <div ref={messagesEndRef} />
             </div>
 
             <div className="metallic-brush-new-conversation" onClick={handleNewConversation}>
@@ -311,10 +306,11 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
                     handleSendMessage();
                   }
                 }}
+                disabled={isLoading}
               />
               <button 
                 onClick={handleSendMessage}
-                disabled={!inputMessage.trim()}
+                disabled={!inputMessage.trim() || isLoading}
               >
                 <Send size={18} />
               </button>
