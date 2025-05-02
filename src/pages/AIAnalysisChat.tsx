@@ -1,7 +1,22 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck } from 'lucide-react';
 import '../styles/metallicBrushTheme.css';
-import { getOrCreateChatSession, sendMessage, subscribeToMessages, ChatMessage } from '../lib/chat';
+import { sendChatMessageBackend, getAvailableModels } from '../services/backendApi';
+
+type ChatMessage = {
+  id?: string;
+  sender: 'user' | 'assistant';
+  text: string;
+};
+
+type Model = {
+  id: string;
+  name: string;
+  description: string;
+  premium: boolean;
+  creditCost: number;
+  beta: boolean;
+};
 
 // Removed sidebar mock data as it's no longer needed
 
@@ -24,43 +39,52 @@ const supportedIndicators = [
 const MetallicBrushAnalyzerUI: React.FC = () => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputMessage, setInputMessage] = useState('');
-  const [sessionId, setSessionId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const selectedModel = 'GPT-4o';
+  const [models, setModels] = useState<Model[]>([]);
+  const [selectedModel, setSelectedModel] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize chat session and subscribe to messages
+
+
   useEffect(() => {
-    let unsubscribe: (() => void) | null = null;
-    getOrCreateChatSession().then((id) => {
-      setSessionId(id);
-      unsubscribe = subscribeToMessages(id, (msgs) => {
-        setMessages(msgs);
-        // Scroll to bottom on new message
-        setTimeout(() => {
-          messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-        }, 100);
-      });
-    });
-    return () => {
-      if (unsubscribe) unsubscribe();
-    };
+    (async () => {
+      try {
+        const data = await getAvailableModels();
+        if (Array.isArray(data)) {
+          setModels(data);
+          if (data.length > 0) setSelectedModel(data[0].id);
+        } else {
+          setModels([]);
+        }
+      } catch (err) {
+        setModels([]);
+      }
+    })();
   }, []);
 
   const handleSendMessage = async () => {
-    if (!inputMessage.trim() || !sessionId) return;
+    if (!inputMessage.trim()) return;
     setIsLoading(true);
+    const userMessage: ChatMessage = { sender: 'user', text: inputMessage };
+    setMessages((prev) => [...prev, userMessage]);
+    setInputMessage('');
     try {
-      await sendMessage(sessionId, inputMessage);
-      setInputMessage('');
+      const response = await sendChatMessageBackend(
+        [...messages, userMessage].map(({ sender, text }) => ({ role: sender, content: text })),
+        selectedModel
+      );
+      // Assume response is a string or { reply: string }
+      const assistantText = typeof response === 'string' ? response : (response.reply || '');
+      setMessages((prev) => [...prev, { sender: 'assistant', text: assistantText }]);
     } catch (err) {
-      alert((err as Error).message);
+      setMessages((prev) => [...prev, { sender: 'assistant', text: 'Sorry, there was an error. Please try again.' }]);
     } finally {
       setIsLoading(false);
     }
   };
+
 
   const handleNewConversation = () => {
     window.location.reload(); // Simple way to reset session and state
@@ -238,12 +262,24 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
               <h2 className="text-xl font-semibold">Chat Analysis</h2>
               <div className="metallic-brush-model-selector">
                 <div className="flex items-center">
-                  <span>Selected Model:</span>
-                  <span className="metallic-brush-model-badge">{selectedModel}</span>
-                  <span className="metallic-brush-premium-badge">Premium</span>
+                  <span>Model:</span>
+                  <select
+                    className="ml-2 px-2 py-1 rounded bg-gray-700 text-white border border-gray-500"
+                    value={selectedModel}
+                    onChange={e => setSelectedModel(e.target.value)}
+                  >
+                    {models.map((model) => (
+                      <option key={model.id} value={model.id}>
+                        {model.name} {model.premium ? '⭐' : ''}
+                      </option>
+                    ))}
+                  </select>
+                  {models.find(m => m.id === selectedModel)?.premium && (
+                    <span className="metallic-brush-premium-badge ml-2">Premium</span>
+                  )}
                 </div>
                 <div className="text-xs text-gray-400">
-                  {selectedModel} (1.25x credit)
+                  {models.find(m => m.id === selectedModel)?.description || ''}
                 </div>
               </div>
             </div>
