@@ -745,7 +745,7 @@ export function EAGenerator() {
          </div>
          <div className="space-y-2 sm:space-y-3 md:space-y-4">
            {/* Collapsible Guide Section */}
-           <div className="p-3 sm:p-4 md:p-5 relative ea-generator-card" style={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
+           <div className="p-3 sm:p-4 md:p-5 relative  metallic-brush-left-panel" style={{ borderRadius: '0.75rem', overflow: 'hidden' }}>
               <button
                 onClick={() => setIsGuideExpanded(!isGuideExpanded)}
                 className={`w-full flex items-center justify-between relative z-10 ${
@@ -815,7 +815,7 @@ export function EAGenerator() {
              )}
            </div>
            {/* Chat Window */}
-           <div className="rounded-xl ea-generator-card overflow-hidden w-full">
+           <div className="rounded-xl  metallic-brush-left-panel overflow-hidden w-full">
              <div className="flex items-center justify-between p-3 sm:p-4 md:p-5 border-b border-cyan-500/30">
                <h2 className="text-xl font-semibold ea-generator-text">Trading Strategy Analyzer</h2>
                <div className="flex items-center gap-2">
