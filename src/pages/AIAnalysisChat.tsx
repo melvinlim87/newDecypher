@@ -44,6 +44,9 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
   const [selectedModel, setSelectedModel] = useState<string>('');
   const [isUploading, setIsUploading] = useState(false);
   const [analysisResults, setAnalysisResults] = useState<string | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
 
@@ -90,60 +93,43 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
     window.location.reload(); // Simple way to reset session and state
   };
 
-  const handleUploadChart = () => {
-    setIsUploading(true);
-    
-    // Simulate chart upload and analysis
-    setTimeout(() => {
-      setIsUploading(false);
-      setAnalysisResults(`
-      🤖 **AI ANALYSIS**
-      Symbol: EURUSD
-      Timeframe: 4H
-      ---
-      📊 **MARKET SUMMARY**
-      - **Current Price:** 1.0842
-      - **Support Levels:** 1.0820, 1.0795
-      - **Resistance Levels:** 1.0865, 1.0890
-      - **Market Structure:** Sideways consolidation
-      - **Volatility:** Moderate
-      ---
-      📈 **TECHNICAL ANALYSIS**
-      - **Price Movement:** EURUSD is trading within a tight range between 1.0820 and 1.0865, showing signs of consolidation after a recent downtrend. Price is currently testing the upper boundary of this range.
-      
-      **TECHNICAL INDICATORS**
-      
-      - 🎯 **RSI INDICATOR**
-      - **Current Values:** 52.8
-      - **Signal:** Neutral
-      - **Analysis:** RSI is in neutral territory, suggesting balanced buying and selling pressure
-      
-      - 📊 **MACD INDICATOR**
-      - **Current Values:** MACD line: -0.0012, Signal line: -0.0018, Histogram: 0.0006
-      - **Signal:** Bullish divergence
-      - **Analysis:** MACD histogram turning positive, indicating potential upward momentum
-      ---
-      💡 **TRADING SIGNAL**
-      - **Action:** BUY
-      - **Entry Price:** 1.0845
-      - **Stop Loss:** 1.0815
-      - **Take Profit:** 1.0885
-      ---
-      📈**Signal Reasoning:**
-      - Price bouncing off support with increasing momentum
-      - MACD showing bullish divergence
-      - Price structure forming higher lows
-      - Volume increasing on upward movements
-      ---
-      ⚠️**Risk Assessment:**
-      - Keep position size limited to 2% of capital
-      - Be aware of upcoming ECB announcement
-      - Major resistance at 1.0890 could limit upside
-      ---
-      Confidence Level: 68%
-      `);
-    }, 2000);
+  // Handle file input change for image upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    setUploadError(null);
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.type.startsWith('image/')) {
+      setUploadError('Only image files are supported.');
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = async (ev) => {
+      const base64 = ev.target?.result as string;
+      setUploadedImage(base64);
+      setIsAnalyzing(true);
+      setAnalysisResults(null);
+      try {
+        const result = await import('../services/backendApi').then(api => api.analyzeImageBackend(base64, selectedModel));
+        setAnalysisResults(result);
+      } catch (err) {
+        setUploadError('Failed to analyze image. Please try again.');
+        setAnalysisResults(null);
+      } finally {
+        setIsAnalyzing(false);
+      }
+    };
+    reader.onerror = () => {
+      setUploadError('Failed to read image file.');
+    };
+    reader.readAsDataURL(file);
   };
+
+  const handleRemoveImage = () => {
+    setUploadedImage(null);
+    setAnalysisResults(null);
+    setUploadError(null);
+  };
+
 
   return (
     <div className="metallic-brush-theme metallic-brush-container">
@@ -200,14 +186,39 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
               </div>
             </div>
 
-            <div 
-              className="metallic-brush-upload-area"
-              onClick={handleUploadChart}
-            >
-              <Cloud size={48} className="metallic-brush-upload-icon" />
-              <p className="text-center">Click to upload or drag and drop</p>
-              <p className="text-sm text-gray-400 mt-2 text-center">PNG, JPG or GIF</p>
+            {/* Chart Upload Section - moved here */}
+            <div className="metallic-brush-upload-outer">
+              <div className="metallic-brush-upload-dropzone">
+                {!uploadedImage && (
+                  <label className="metallic-brush-upload-label">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      style={{ display: 'none' }}
+                      onChange={handleImageUpload}
+                      disabled={isAnalyzing}
+                    />
+                    <div className="metallic-brush-upload-center">
+                      <Cloud size={48} className="metallic-brush-upload-cloud" />
+                      <div className="metallic-brush-upload-text-main">Click to upload or drag and drop</div>
+                      <div className="metallic-brush-upload-text-sub">PNG, JPG or GIF</div>
+                    </div>
+                  </label>
+                )}
+                {uploadedImage && (
+                  <div className="metallic-brush-upload-preview">
+                    <img src={uploadedImage} alt="Uploaded Chart" className="metallic-brush-image-preview" />
+                    <button className="metallic-brush-remove-btn" onClick={handleRemoveImage} disabled={isAnalyzing}>
+                      Remove
+                    </button>
+                  </div>
+                )}
+                {uploadError && <div className="metallic-brush-error">{uploadError}</div>}
+              </div>
             </div>
+
+
+
 
             <div className="metallic-brush-indicators-list">
               <h3 className="text-sm font-medium">Supported Technical Indicators:</h3>
@@ -240,14 +251,16 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
                 )}
               </div>
               <div className="metallic-brush-analysis-content">
-                {isUploading ? (
+                {isAnalyzing && (
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
                     <p>Analyzing chart...</p>
                   </div>
-                ) : analysisResults ? (
+                )}
+                {!isAnalyzing && analysisResults && (
                   <pre className="whitespace-pre-wrap text-sm">{analysisResults}</pre>
-                ) : (
+                )}
+                {!isAnalyzing && !analysisResults && (
                   <div className="flex items-center justify-center h-full text-gray-400">
                     <p>Upload a chart image to see the analysis here</p>
                   </div>
@@ -284,35 +297,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
               </div>
             </div>
             
-            <div className="metallic-brush-instructions">
-              <p><strong>AI Chat Instructions:</strong></p>
-              <div className="instructions-grid">
-                <div className="instruction-item">
-                  <div className="instruction-icon question">
-                    <HelpCircle size={18} className="animated-icon" />
-                  </div>
-                  <span className="instruction-text">1. Ask specific questions about the chart analysis</span>
-                </div>
-                <div className="instruction-item">
-                  <div className="instruction-icon strategy">
-                    <TrendingUp size={18} className="animated-icon" />
-                  </div>
-                  <span className="instruction-text">2. Request trading strategies or risk assessments</span>
-                </div>
-                <div className="instruction-item">
-                  <div className="instruction-icon indicator">
-                    <Activity size={18} className="animated-icon" />
-                  </div>
-                  <span className="instruction-text">3. Inquire about specific indicators or patterns</span>
-                </div>
-                <div className="instruction-item">
-                  <div className="instruction-icon refresh">
-                    <RefreshCw size={18} className="animated-icon" />
-                  </div>
-                  <span className="instruction-text">4. Click "New Conversation" to start fresh</span>
-                </div>
-              </div>
-            </div>
+
 
             <div className="metallic-brush-chat-messages">
               {messages.map((message, index) => (
