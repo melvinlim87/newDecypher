@@ -258,7 +258,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
                   </div>
                 )}
                 {!isAnalyzing && analysisResults && (
-                  <pre className="whitespace-pre-wrap text-sm">{analysisResults}</pre>
+                  <pre className="whitespace-pre-wrap text-sm">{(analysisResults || '').replace(/##?\s?/g, '').replace(/\*\*/g, '')}</pre>
                 )}
                 {!isAnalyzing && !analysisResults && (
                   <div className="flex items-center justify-center h-full text-gray-400">
