@@ -74,8 +74,16 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
     setMessages((prev) => [...prev, userMessage]);
     setInputMessage('');
     try {
+      // Always include the latest analysisResults as a system message for context
+      let chatHistory = [...messages, userMessage].map(({ sender, text }) => ({ role: sender, content: text }));
+      if (analysisResults) {
+        chatHistory = [
+          { role: 'system', content: `Analysis Result:\n${analysisResults}` },
+          ...chatHistory
+        ];
+      }
       const response = await sendChatMessageBackend(
-        [...messages, userMessage].map(({ sender, text }) => ({ role: sender, content: text })),
+        chatHistory,
         selectedModel
       );
       // Assume response is a string or { reply: string }
@@ -111,6 +119,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
       try {
         const result = await import('../services/backendApi').then(api => api.analyzeImageBackend(base64, selectedModel));
         setAnalysisResults(result);
+setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete. You can now ask questions about the analysis result.' }]);
       } catch (err) {
         setUploadError('Failed to analyze image. Please try again.');
         setAnalysisResults(null);
@@ -305,7 +314,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
                   key={message.id || index} 
                   className={`metallic-brush-message ${message.sender}`}
                 >
-                  {message.text}
+                  {message.text.replace(/##?\s?/g, '').replace(/\*\*/g, '')}
                 </div>
               ))}
               <div ref={messagesEndRef} />
