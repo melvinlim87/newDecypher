@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck } from 'lucide-react';
+import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck, User, Bot } from 'lucide-react';
 import '../styles/metallicBrushTheme.css';
 import { sendChatMessageBackend, getAvailableModels } from '../services/backendApi';
 
@@ -311,12 +311,20 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
             <div className="metallic-brush-chat-messages">
               {messages.map((message, index) => (
                 <div 
-                  key={message.id || index} 
-                  className={`metallic-brush-message ${message.sender}`}
+                  key={message.id || index}
+                  className={`metallic-brush-message ${message.sender} ${message.sender === 'user' ? 'right' : 'left'}`}
                 >
-                  {message.text.replace(/##?\s?/g, '').replace(/\*\*/g, '')}
+                  <span className="chat-icon">
+                    {message.sender === 'user' ? <User size={20} className="user-icon" /> : <Bot size={20} className="ai-icon" />}
+                  </span>
+                  <span className="chat-text">{message.text.replace(/##?\s?/g, '').replace(/\*\*/g, '')}</span>
                 </div>
               ))}
+              {isLoading && (
+                <div className="metallic-brush-message assistant metallic-brush-thinking">
+                  <span className="thinking-dot">Thinking<span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span></span>
+                </div>
+              )}
               <div ref={messagesEndRef} />
             </div>
 
