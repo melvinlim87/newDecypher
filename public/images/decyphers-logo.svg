@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1000" height="300" viewBox="0 0 1000 300" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hexagon with gradient -->
+  <defs>
+    <linearGradient id="hexGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#C0C0C0" />
+      <stop offset="50%" stop-color="#7FB3D5" />
+      <stop offset="100%" stop-color="#0E4D92" />
+    </linearGradient>
+  </defs>
+  
+  <!-- Hexagon shape -->
+  <path d="M127.5,10 L235,75 L235,205 L127.5,270 L20,205 L20,75 Z" fill="url(#hexGradient)" stroke="#A9CCE3" stroke-width="5"/>
+  
+  <!-- Vertical bars -->
+  <rect x="60" y="100" width="30" height="100" fill="#0E6EB8" rx="5"/>
+  <rect x="100" y="80" width="30" height="120" fill="#0E6EB8" rx="5"/>
+  
+  <!-- Circle with stem -->
+  <circle cx="170" cy="100" r="20" fill="#0E6EB8" stroke="#A9CCE3" stroke-width="2"/>
+  <rect x="165" y="100" width="10" height="80" fill="#0E6EB8" rx="2"/>
+  
+  <!-- DECYPHERS text -->
+  <text x="270" y="170" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="#C0C0C0" letter-spacing="5">DECYPHERS</text>
+  
+  <!-- AI chip icon -->
+  <g transform="translate(950, 80)">
+    <rect x="-40" y="0" width="80" height="80" fill="#0E6EB8" rx="10"/>
+    <text x="0" y="50" font-family="Arial, sans-serif" font-size="40" font-weight="bold" fill="white" text-anchor="middle">AI</text>
+    <!-- Chip pins -->
+    <rect x="-35" y="-10" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="-15" y="-10" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="5" y="-10" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="25" y="-10" width="10" height="5" fill="#0E6EB8"/>
+    
+    <rect x="-35" y="85" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="-15" y="85" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="5" y="85" width="10" height="5" fill="#0E6EB8"/>
+    <rect x="25" y="85" width="10" height="5" fill="#0E6EB8"/>
+    
+    <rect x="-50" y="-35" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="-50" y="-15" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="-50" y="5" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="-50" y="25" width="5" height="10" fill="#0E6EB8"/>
+    
+    <rect x="45" y="-35" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="45" y="-15" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="45" y="5" width="5" height="10" fill="#0E6EB8"/>
+    <rect x="45" y="25" width="5" height="10" fill="#0E6EB8"/>
+  </g>
+</svg>

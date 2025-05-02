@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { MessageSquare, AlertCircle, X, Loader2, Send, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
+import {AlertCircle, X, Loader2, ChevronLeft, ChevronRight, Code2 } from 'lucide-react';
+import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck } from 'lucide-react';
 import { UploadConfirmationModal } from '../components/UploadConfirmationModal';
 import { getAvailableModels } from '../services/backendApi';
 
@@ -1903,12 +1904,15 @@ useEffect(() => {
   // Main render
   return (
     <div
-      className={`ai-chat-page ai-chat-page-container silver-theme-container ${theme} silver-theme ${!isCollapsed ? 'sidebar-expanded' : 'sidebar-collapsed'}`}
+      className="metallic-brush-theme metallic-brush-container"
     >
      
-      <h1 className="ai-chat-title silver-text">
-        AI Analysis
-      </h1>
+     <div className="metallic-brush-main-header">
+          <div className="metallic-brush-main-title">
+            <BarChart2 size={24} className="mr-2" />
+            <span>AI Chart Analyzer</span>
+          </div>
+        </div>
       {/* Global dot pattern overlay for entire page */}
       <div className="ai-chat-dot-pattern"></div>
       
