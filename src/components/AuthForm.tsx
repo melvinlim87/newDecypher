@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { FIREBASE_LOGIN_URL } from '../config';
 import { auth } from '../lib/firebase';
 import { 
   createUserWithEmailAndPassword, 
@@ -196,7 +197,7 @@ export function AuthForm({ type }: AuthFormProps) {
         // 2. Get Firebase ID token
         const idToken = await userCredential.user.getIdToken();
         // 3. Exchange for Sanctum token
-        const res = await fetch('https://ai.decyphers.com/api/firebase-login', {
+        const res = await fetch(FIREBASE_LOGIN_URL, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ idToken }),

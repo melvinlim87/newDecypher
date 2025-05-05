@@ -1,22 +1,20 @@
 // src/services/backendApi.ts
 import axios from 'axios';
-
-// Use production API URL directly for deployment
-const API_BASE_URL = 'https://ai.decyphers.com/api';
+import { API_BASE_URL, MODELS_API_URL, MODEL_COST_URL, OPENROUTER_API_URL } from '../config';
 
 export async function getAvailableModels() {
-  const response = await axios.get(`${API_BASE_URL}/models`);
+  const response = await axios.get(MODELS_API_URL);
   return response.data;
 }
 
 export async function calculateModelTokenCost(modelId: string, isAnalysis: boolean = false) {
-  const response = await axios.post(`${API_BASE_URL}/model-cost`, { modelId, isAnalysis });
+  const response = await axios.post(MODEL_COST_URL, { modelId, isAnalysis });
   return response.data;
 }
 
 export async function analyzeImageBackend(imageUrl: string, modelId: string) {
   const token = localStorage.getItem('sanctum_token');
-  const response = await axios.post(`${API_BASE_URL}/openrouter/analyze-image`, {
+  const response = await axios.post(`${OPENROUTER_API_URL}/analyze-image`, {
     image: imageUrl,
     modelId
   }, {
@@ -30,7 +28,7 @@ export async function analyzeImageBackend(imageUrl: string, modelId: string) {
 
 export async function sendChatMessageBackend(messages: any[], modelId: string, chartAnalysis?: string) {
   const token = localStorage.getItem('sanctum_token');
-   const response = await axios.post(`${API_BASE_URL}/openrouter/send-chat`, {
+   const response = await axios.post(`${OPENROUTER_API_URL}/send-chat`, {
     messages,
     modelId,
     chartAnalysis
