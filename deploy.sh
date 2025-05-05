@@ -80,8 +80,8 @@ ssh $HOSTINGER_SSH_USER@$HOSTINGER_SSH_HOST "if [ ! -f $BACKEND_REMOTE_PATH/.env
     echo 'DB_HOST=localhost' >> $BACKEND_REMOTE_PATH/.env
     echo 'DB_PORT=3306' >> $BACKEND_REMOTE_PATH/.env
     echo 'DB_DATABASE=decyphers' >> $BACKEND_REMOTE_PATH/.env
-    echo 'DB_USERNAME=root' >> $BACKEND_REMOTE_PATH/.env
-    echo 'DB_PASSWORD=' >> $BACKEND_REMOTE_PATH/.env
+    echo 'DB_USERNAME=decyphers' >> $BACKEND_REMOTE_PATH/.env
+    echo 'DB_PASSWORD=pE6HAuLKXJHOO9mLnOy' >> $BACKEND_REMOTE_PATH/.env
     echo 'Basic .env file created manually'
   fi
 else 
