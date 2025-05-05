@@ -21,10 +21,8 @@ export interface TechnicalIndicators {
   };
 }
 
-// Replace YOUR_RENDER_URL with your actual Render.com service URL
-const API_BASE_URL = process.env.NODE_ENV === 'production' 
-  ? 'https://james-project.onrender.com'
-  : 'http://localhost:3005';
+// Use the production URL for all environments
+const API_BASE_URL = 'https://ai.decyphers.com/api';
 
 // Deterministic random number generator for consistent behavior
 function seededRandom(seed: number): number {

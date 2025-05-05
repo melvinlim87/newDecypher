@@ -57,7 +57,7 @@ export async function saveChartImage(
 
     // Use netlify function proxy with correct development URL
     const proxyUrl = import.meta.env.DEV 
-      ? 'http://localhost:8888/.netlify/functions/chart-proxy'
+      ? 'https://ai.decyphers.com/api/chart'
       : '/.netlify/functions/chart-proxy';
 
     const requestBody = {
