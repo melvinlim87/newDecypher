@@ -1,7 +1,8 @@
 // src/services/backendApi.ts
 import axios from 'axios';
 
-const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8000/api';
+// Use production API URL directly for deployment
+const API_BASE_URL = 'https://ai.decyphers.com/api';
 
 export async function getAvailableModels() {
   const response = await axios.get(`${API_BASE_URL}/models`);
