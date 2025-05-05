@@ -36,7 +36,7 @@ server {
     
     # Let's Encrypt verification
     location /.well-known/acme-challenge/ {
-        root /home/decyphers-ai/htdocs/ai.decyphers.com/public;
+        root /home/decyphers-ai/htdocs/newDecypher/public;
         allow all;
     }
 }
@@ -46,7 +46,7 @@ server {
     listen [::]:443 ssl;
     server_name ai.decyphers.com;
 
-    root /home/decyphers-ai/htdocs/ai.decyphers.com/public;
+    root /home/decyphers-ai/htdocs/newDecypher/public;
     index index.html index.php;
 
     # Use Let's Encrypt certificates

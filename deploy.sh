@@ -11,8 +11,8 @@ echo "Starting deployment process for Decyphers UI..."
 # Variables - Update these with your specific Hostinger details
 HOSTINGER_SSH_USER="root"
 HOSTINGER_SSH_HOST="195.179.193.52"
-FRONTEND_REMOTE_PATH="/home/htdocs/ai.decyphers.com/public"  # For the frontend (public web root)
-BACKEND_REMOTE_PATH="/home/htdocs/ai.decyphers.com/backend"  # For the Laravel backend (outside public web root)
+FRONTEND_REMOTE_PATH="/home/decyphers-ai/htdocs/newDecypher/public"  # For the frontend (public web root)
+BACKEND_REMOTE_PATH="/home/decyphers-ai/htdocs/newDecypher/backend"  # For the Laravel backend (outside public web root)
 
 # Build the frontend
 echo "Building frontend..."
@@ -101,5 +101,5 @@ echo "Cleaning up local deployment files..."
 rm frontend-deploy.tar.gz backend-deploy.tar.gz
 
 echo "Deployment completed successfully!"
-echo "Frontend: https://$HOSTINGER_SSH_HOST"
-echo "Backend API: https://$HOSTINGER_SSH_HOST/api"
+echo "Frontend: https://ai.decyphers.com"
+echo "Backend API: https://ai.decyphers.com/api"
