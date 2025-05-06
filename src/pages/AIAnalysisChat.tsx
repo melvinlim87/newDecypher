@@ -37,7 +37,13 @@ const supportedIndicators = [
 
 
 const MetallicBrushAnalyzerUI: React.FC = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  // Initialize with a welcome message from the assistant
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    { 
+      sender: 'assistant', 
+      text: 'Upload an image and I\'ll help you analyze afterwards' 
+    }
+  ]);
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
