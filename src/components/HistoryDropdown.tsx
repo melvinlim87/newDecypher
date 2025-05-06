@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { auth, database } from '../lib/firebase';
 import { ref, onValue, query, limitToLast, orderByChild } from 'firebase/database';
@@ -15,7 +15,8 @@ interface HistoryItem {
   timestamp: string;
   timeframe?: string;
   chartUrls?: string[];
-  messages?: string[];
+  messages?: any[]; // Changed from string[] to any[] to support message objects
+  model?: string; // Added model property
 }
 
 interface HistoryListProps {
@@ -95,6 +96,17 @@ export function HistoryList({ isCollapsed, isExpanded, onToggle, historyType, la
         }
       }
 
+      // Add a confirmation message to the messages array
+      if (messagesData && Array.isArray(messagesData)) {
+        // Add a system message confirming history was loaded
+        messagesData.push({
+          role: 'assistant',
+          content: selectedItem.type === 'market-analysis' 
+            ? 'Analysis history successfully loaded! 🔄' 
+            : 'Chat conversation loaded! 💬'
+        });
+      }
+
       if (selectedItem.type === 'market-analysis') {
         // Load the history content into the analysis context
         setAnalysis(selectedItem.content);
@@ -110,7 +122,8 @@ export function HistoryList({ isCollapsed, isExpanded, onToggle, historyType, la
             messages: messagesData,
             timeframe: selectedItem.timeframe || null,
             chartUrls: selectedItem.chartUrls || [],
-            model: selectedItem.model || 'anthropic/claude-3-opus:beta' // Include the model information
+            model: selectedItem.model || 'anthropic/claude-3-opus:beta', // Include the model information
+            loadTime: new Date().getTime() // Add timestamp to force state update
           } 
         });
       } else if (selectedItem.type === 'chat-conversation') {
@@ -124,7 +137,8 @@ export function HistoryList({ isCollapsed, isExpanded, onToggle, historyType, la
             messages: messagesData,
             timeframe: selectedItem.timeframe || null,
             chartUrls: selectedItem.chartUrls || [],
-            model: selectedItem.model || 'anthropic/claude-3-opus:beta' // Include the model information
+            model: selectedItem.model || 'anthropic/claude-3-opus:beta', // Include the model information
+            loadTime: new Date().getTime() // Add timestamp to force state update
           } 
         });
       } else if (selectedItem.type === 'ea-generator') {

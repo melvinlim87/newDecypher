@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, RefreshCw, Activity, ClipboardCheck, User, Bot } from 'lucide-react';
+import { useLocation } from 'react-router-dom';
 import '../styles/metallicBrushTheme.css';
 import { sendChatMessageBackend, getAvailableModels } from '../services/backendApi';
 
 type ChatMessage = {
   id?: string;
-  sender: 'user' | 'assistant';
+  sender: 'user' | 'assistant' | 'system';
   text: string;
 };
 
@@ -37,24 +38,69 @@ const supportedIndicators = [
 
 
 const MetallicBrushAnalyzerUI: React.FC = () => {
-  // Initialize with a welcome message from the assistant
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    { 
+  const location = useLocation();
+  const locationState = location.state as {
+    analysisId?: string;
+    content?: string;
+    messages?: any[];
+    timeframe?: string | null;
+    chartUrls?: string[];
+    model?: string;
+  } | null;
+
+  // Initialize with either history messages or a welcome message
+  const [messages, setMessages] = useState<ChatMessage[]>(() => {
+    // If we have history messages from navigation state, use those
+    if (locationState?.messages && Array.isArray(locationState.messages)) {
+      // Convert the messages to our ChatMessage format
+      return locationState.messages
+        .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+        .map(msg => ({
+          sender: msg.role as 'user' | 'assistant',
+          text: msg.content || ''
+        }));
+    }
+    // Otherwise use the default welcome message
+    return [{ 
       sender: 'assistant', 
       text: 'Upload an image and I\'ll help you analyze afterwards' 
-    }
-  ]);
+    }];
+  });
+
   const [inputMessage, setInputMessage] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [models, setModels] = useState<Model[]>([]);
-  const [selectedModel, setSelectedModel] = useState<string>('');
+  const [selectedModel, setSelectedModel] = useState<string>(locationState?.model || '');
   const [isUploading, setIsUploading] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState<string | null>(null);
+  const [analysisResults, setAnalysisResults] = useState<string | null>(
+    locationState?.content || null
+  );
   const [uploadError, setUploadError] = useState<string | null>(null);
-  const [uploadedImage, setUploadedImage] = useState<string | null>(null);
+  const [uploadedImage, setUploadedImage] = useState<string | null>(
+    // If we have chart URLs from history, use the first one
+    locationState?.chartUrls && locationState.chartUrls.length > 0 
+      ? locationState.chartUrls[0] 
+      : null
+  );
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Scroll to bottom of messages when they change
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
+  // Handle history loading confirmation
+  useEffect(() => {
+    // If we loaded from history, add a confirmation message
+    if (locationState?.analysisId && locationState?.content && messages.length > 0) {
+      // Add a system message confirming the history was loaded
+      setMessages(prev => [...prev, {
+        sender: 'system',
+        text: 'Analysis history successfully loaded! 📊'
+      }]);
+    }
+  }, [locationState]);
 
 
   useEffect(() => {
@@ -63,7 +109,14 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
         const data = await getAvailableModels();
         if (Array.isArray(data)) {
           setModels(data);
-          if (data.length > 0) setSelectedModel(data[0].id);
+          
+          // If we have a model from history, use that
+          if (locationState?.model) {
+            setSelectedModel(locationState.model);
+          } else if (data.length > 0) {
+            // Otherwise use the first available model
+            setSelectedModel(data[0].id);
+          }
         } else {
           setModels([]);
         }
@@ -71,7 +124,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
         setModels([]);
       }
     })();
-  }, []);
+  }, [locationState?.model]); // Add locationState.model as dependency
 
   const handleSendMessage = async () => {
     if (!inputMessage.trim()) return;
@@ -103,8 +156,40 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
   };
 
 
-  const handleNewConversation = () => {
-    window.location.reload(); // Simple way to reset session and state
+  const handleNewConversation = (addWelcomeMessage = true) => {
+    // Clear all state instead of reloading the page
+    if (addWelcomeMessage) {
+      setMessages([{ 
+        sender: 'assistant', 
+        text: 'Upload an image and I\'ll help you analyze it.' 
+      }]);
+    } else {
+      // Just clear the messages without adding a welcome message
+      setMessages([]);
+    }
+    
+    setInputMessage('');
+    setAnalysisResults(null);
+    setUploadedImage(null);
+    setUploadError(null);
+    setIsAnalyzing(false);
+    setIsUploading(false);
+    
+    // Reset any file inputs by clearing their value
+    const fileInputs = document.querySelectorAll('input[type="file"]');
+    fileInputs.forEach(input => {
+      const fileInput = input as HTMLInputElement;
+      fileInput.value = '';
+    });
+    
+    // Clear the location state by replacing the current URL without state
+    window.history.replaceState({}, document.title, window.location.pathname);
+    
+    // Force a re-render of any components that might be caching state
+    setTimeout(() => {
+      // This small timeout helps ensure the UI is fully updated
+      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
   // Handle file input change for image upload
@@ -259,7 +344,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                 {analysisResults && (
                   <button 
                     className="metallic-brush-btn metallic-brush-btn-secondary text-xs"
-                    onClick={() => setAnalysisResults(null)}
+                    onClick={() => handleNewConversation(false)}
                   >
                     Clear Analysis
                   </button>
@@ -331,10 +416,10 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                   <span className="thinking-dot">Thinking<span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span></span>
                 </div>
               )}
-              <div ref={messagesEndRef} />
+              {messages.length > 0 && <div ref={messagesEndRef} />}
             </div>
 
-            <div className="metallic-brush-new-conversation" onClick={handleNewConversation}>
+            <div className="metallic-brush-new-conversation" onClick={() => handleNewConversation(true)}>
               <MessageSquare size={16} />
               <span>New Conversation</span>
             </div>
