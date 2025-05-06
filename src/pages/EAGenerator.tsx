@@ -725,21 +725,20 @@ export function EAGenerator() {
     
       
                <div className="w-full max-w-[99%] lg:max-w-[98%] xl:max-w-[97%] 2xl:max-w-[96%] mx-auto px-1 sm:px-2 md:px-3 py-2 sm:py-3">
-         <div className="flex flex-col items-center justify-center mb-4 sm:mb-6 md:mb-8 fade-in">
-           <div className="relative mb-4 sm:mb-6 flex justify-center items-center w-16 sm:w-20 h-16 sm:h-20">
+         <div className="flex items-center justify-center mb-4 sm:mb-6 md:mb-8 fade-in">
+           <div className="relative flex justify-center items-center w-12 sm:w-14 h-12 sm:h-14 mr-3 sm:mr-4">
              <div className="absolute inset-0" style={{ transform: 'rotate(44.598deg)' }}>
                <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-100 rounded-full animate-spin-slow"></div>
              </div>
              <div className="absolute inset-0" style={{ transform: 'rotate(-187.464deg)' }}>
-               <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-100 rounded-full animate-reverse-spin"></div>
+               
              </div>
              <div className="absolute inset-2 bg-gray-900 rounded-full"></div>
-             <div className="absolute inset-4 flex items-center justify-center">
-               <Code2 className="w-6 sm:w-8 h-6 sm:h-8 text-cyan-400" />
+             <div className="absolute inset-3 flex items-center justify-center">
+               <Code2 className="w-5 sm:w-6 h-5 sm:h-6 text-cyan-400" />
              </div>
-             <div className="absolute inset-0 bg-gradient-to-r from-cyan-500 to-blue-500 opacity-20 rounded-full animate-pulse"></div>
            </div>
-           <h1 className="text-4xl sm:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-300 hover:to-blue-300 transition-all duration-500">
+           <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-300 hover:to-blue-300 transition-all duration-500">
              EA Generator
            </h1>
          </div>
