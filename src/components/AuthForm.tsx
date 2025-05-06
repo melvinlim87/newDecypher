@@ -199,23 +199,50 @@ export function AuthForm({ type }: AuthFormProps) {
         const idToken = await userCredential.user.getIdToken();
         // 3. Exchange for Sanctum token
         try {
-          console.log('Calling firebase-login endpoint with token');
-          const res = await axios.post(FIREBASE_LOGIN_URL, 
-            { idToken },
-            { 
-              headers: { 
-                'Content-Type': 'application/json',
-                'X-Requested-With': 'XMLHttpRequest'
-              }
-            }
-          );
+          // Log the token length for debugging (don't log the full token for security)
+          console.log(`Firebase ID token obtained (length: ${idToken.length})`); 
           
-          console.log('Login response:', res.data);
+          // Try a different approach - use fetch with more detailed error handling
+          console.log('Calling firebase-login endpoint with token');
+          
+          // First, try to get a CSRF cookie if needed
+          await axios.get(`${FIREBASE_LOGIN_URL.split('/api/')[0]}/sanctum/csrf-cookie`, {
+            withCredentials: true
+          }).catch(e => console.log('CSRF cookie request (this might fail safely):', e.message));
+          
+          // Then make the actual login request
+          const res = await fetch(FIREBASE_LOGIN_URL, {
+            method: 'POST',
+            credentials: 'include', // Important for cookies
+            headers: { 
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify({ 
+              idToken,
+              // Include extra info that might help with debugging
+              email: userCredential.user.email,
+              uid: userCredential.user.uid
+            })
+          });
+          
+          if (!res.ok) {
+            const errorText = await res.text();
+            console.error(`Login failed with status ${res.status}:`, errorText);
+            throw new Error(`Server returned ${res.status}: ${errorText || res.statusText}`);
+          }
+          
+          const data = await res.json();
+          console.log('Login response:', data);
+          
           // Type check for access_token
-          if (res.data && typeof res.data === 'object' && 'access_token' in res.data) {
-            localStorage.setItem('sanctum_token', res.data.access_token as string);
+          if (data && typeof data === 'object' && 'access_token' in data) {
+            localStorage.setItem('sanctum_token', data.access_token as string);
+            console.log('Token saved to localStorage, redirecting to home');
             navigate('/');
           } else {
+            console.error('No access_token in response:', data);
             setError('Failed to authenticate with backend: No access token received');
           }
         } catch (loginError: any) { // Type assertion for error
