@@ -65,7 +65,7 @@ export function SideBar({}: SideBarProps) {
                 className="block w-full text-left px-4 py-2 text-sm rounded-lg metallic-gradient metallic-border metallic-glow nav-link-hover cursor-pointer"
                 style={{ pointerEvents: 'auto' }}
               >
-                <span className="text-white font-medium">Generate</span>
+                <span className="text-white font-medium">AI Chat Generate</span>
               </button>
               
               <HistoryList 
@@ -101,7 +101,7 @@ export function SideBar({}: SideBarProps) {
             <Code2 className={`w-5 h-5 flex-shrink-0 ${isCollapsed ? 'mx-auto' : ''} text-white`} />
             {!isCollapsed && (
               <>
-                <span className="ml-3 flex-grow text-left text-white font-medium">EA Generator</span>
+                <span className="ml-3 flex-grow text-left text-white font-medium">Strategy Generator</span>
                 {isEAGeneratorExpanded ? (
                   <ChevronUp className="w-4 h-4 text-white" />
                 ) : (
@@ -118,7 +118,7 @@ export function SideBar({}: SideBarProps) {
                 className="block w-full text-left px-4 py-2 text-sm rounded-lg metallic-gradient metallic-border metallic-glow nav-link-hover cursor-pointer"
                 style={{ pointerEvents: 'auto' }}
               >
-                <span className="text-white font-medium">Generate</span>
+                <span className="text-white font-medium">EA Generate</span>
               </button>
               
               <HistoryList 
