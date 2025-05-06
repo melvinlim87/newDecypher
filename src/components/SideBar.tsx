@@ -30,10 +30,10 @@ export function SideBar({}: SideBarProps) {
 
   return (
     <div 
-      className={`relative h-full overflow-y-auto scrollbar-hide backdrop-blur-xl transition-all duration-300 z-40 metallic-gradient metallic-border metallic-glow ${
+      className={`h-full overflow-y-auto scrollbar-hide backdrop-blur-xl transition-all duration-300 metallic-gradient metallic-border metallic-glow ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
-      style={{ borderTop: 'none', position: 'relative', zIndex: 50, pointerEvents: 'auto' }}
+      style={{ borderTop: 'none', position: 'relative', zIndex: 40, pointerEvents: 'auto', height: '100%', top: 0 }}
     >
 
 

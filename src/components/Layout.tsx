@@ -1,11 +1,9 @@
 import { useState, useEffect } from 'react';
 import { NavBar } from './NavBar';
 import { SideBar } from './SideBar';
-import { useLocation } from 'react-router-dom';
 import { auth } from '../lib/firebase';
 import { N8nChatWidget } from './N8nChatWidget';
 import { useTheme } from '../contexts/ThemeContext';
-import { useSidebarState } from '../contexts/SidebarContext';
 import { VerticalCircuitLines } from './VerticalCircuitLines';
 
 interface LayoutProps {
@@ -13,10 +11,8 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
-  const location = useLocation();
   // Remove isAuthPage check to always show navbar
   const isAuthPage = false;
-  const { isCollapsed } = useSidebarState();
   const [showChat, setShowChat] = useState(false);
   const [user, setUser] = useState<any>(auth.currentUser);
   const { theme } = useTheme();
@@ -88,23 +84,23 @@ export function Layout({ children }: LayoutProps) {
       </div>
       
       {/* Fixed navbar at the top */}
-      <div className="flex-none relative z-50">
+      <div className="flex-none sticky top-0 z-50" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
         <NavBar />
       </div>
       
       {/* Main content area with sidebar */}
-      <div className="flex flex-1 overflow-hidden relative z-10">
+      <div className="flex flex-1 overflow-hidden relative z-40" style={{ marginTop: 0, position: 'relative', zIndex: 40 }}>
         {/* Sidebar - only render when authenticated and on medium screens and larger */}
         {!isAuthPage && user && (
-          <div className="hidden md:block flex-none">
+          <div className="hidden md:block flex-none h-full" style={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
             <SideBar />
           </div>
         )}
         
         {/* Main content with scrolling */}
         <main 
-          className={`flex-1 overflow-y-auto scrollbar-hide `}
-          style={{ zIndex: 10 }}
+          className={`flex-1 overflow-y-auto scrollbar-hide`}
+          style={{ zIndex: 30, height: 'calc(100vh - 64px)', position: 'relative', marginTop: 0 }}
         >
           <div className="w-full min-h-full">
             {children}

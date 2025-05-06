@@ -46,6 +46,7 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
     timeframe?: string | null;
     chartUrls?: string[];
     model?: string;
+    loadTime?: number;
   } | null;
 
   // Initialize with either history messages or a welcome message
@@ -93,14 +94,42 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
   // Handle history loading confirmation
   useEffect(() => {
     // If we loaded from history, add a confirmation message
-    if (locationState?.analysisId && locationState?.content && messages.length > 0) {
-      // Add a system message confirming the history was loaded
-      setMessages(prev => [...prev, {
-        sender: 'system',
-        text: 'Analysis history successfully loaded! 📊'
-      }]);
+    if (locationState?.analysisId && locationState?.content) {
+      console.log('Loading history data:', locationState);
+      
+      // Force immediate update of all states from location state
+      if (locationState.messages && Array.isArray(locationState.messages)) {
+        const formattedMessages = locationState.messages
+          .filter(msg => msg.role === 'user' || msg.role === 'assistant')
+          .map(msg => ({
+            sender: msg.role as 'user' | 'assistant',
+            text: msg.content || ''
+          }));
+        
+        // Add confirmation message directly to the formatted messages
+        formattedMessages.push({
+          sender: 'assistant',
+          text: 'Analysis history successfully loaded! 📊'
+        });
+          
+        // Set messages immediately with the confirmation included
+        setMessages(formattedMessages);
+      }
+      
+      // Set other states from location state
+      if (locationState.content) {
+        setAnalysisResults(locationState.content);
+      }
+      
+      if (locationState.chartUrls && locationState.chartUrls.length > 0) {
+        setUploadedImage(locationState.chartUrls[0]);
+      }
+      
+      if (locationState.model) {
+        setSelectedModel(locationState.model);
+      }
     }
-  }, [locationState]);
+  }, [locationState?.loadTime]); // Using loadTime as dependency to ensure it runs when history is loaded
 
 
   useEffect(() => {
@@ -232,23 +261,24 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
 
 
   return (
-    <div className="metallic-brush-theme metallic-brush-container">
+    <div className="metallic-brush-theme metallic-brush-container" style={{ marginTop: 0, position: 'relative', zIndex: 30, height: 'calc(100vh - 64px)' }}>
       {/* Main Content */}
-      <div className="metallic-brush-main">
-        {/* Main Header */}
-        <div className="metallic-brush-main-header">
-          <div className="metallic-brush-main-title">
-            <BarChart2 size={24} className="mr-2" />
-            <span>AI Chart Analyzer</span>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative', overflow: 'hidden' }}>
+        {/* Fixed Header - Always visible */}
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'rgba(30, 41, 59, 0.95)', borderBottom: '1px solid rgba(148, 163, 184, 0.3)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)' }}>
+          <div className="metallic-brush-main-header" style={{ padding: '1.25rem 1.5rem' }}>
+            <div className="metallic-brush-main-title">
+              <BarChart2 size={24} className="mr-2" />
+              <span>AI Chart Analyzer</span>
+            </div>
           </div>
         </div>
         
-        {/* Removed redundant header */}
-
-        {/* Content Area */}
-        <div className="metallic-brush-content">
+        {/* Scrollable Content Area - Fixed height, no scrolling */}
+        <div style={{ flex: 1, overflow: 'hidden', paddingTop: '10px', position: 'relative', zIndex: 30, height: 'calc(100vh - 64px - 60px)', maxHeight: 'calc(100vh - 64px - 60px)' }} className="scrollbar-hide">
+          <div className="metallic-brush-content" style={{ display: 'flex', flexWrap: 'nowrap', height: '100%', maxHeight: '100%' }}>
           {/* Left Panel - Chart Upload */}
-          <div className="metallic-brush-left-panel">
+          <div className="metallic-brush-left-panel scrollbar-hide" style={{ flex: '6', minWidth: '0', overflow: 'auto', position: 'relative', zIndex: 20, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Chart Upload</h2>
               {/* Close button removed */}
@@ -256,8 +286,8 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
             
             <div className="metallic-brush-instructions">
               <p><strong>AI Chart Analyzer Instructions:</strong></p>
-              <div className="instructions-grid">
-                <div className="instructions-grid">
+              <div className="instructions-grid" style={{ maxWidth: '100%', overflow: 'hidden' }}>
+                <div className="instructions-column" style={{ width: '100%' }}>
                   <div className="instruction-item">
                     <div className="instruction-icon upload">
                       <Upload size={18} className="animated-icon" />
@@ -350,7 +380,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                   </button>
                 )}
               </div>
-              <div className="metallic-brush-analysis-content">
+              <div className="metallic-brush-analysis-content" style={{ height: '300px', maxHeight: '300px' }}>
                 {isAnalyzing && (
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
@@ -358,7 +388,9 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                   </div>
                 )}
                 {!isAnalyzing && analysisResults && (
-                  <pre className="whitespace-pre-wrap text-sm">{(analysisResults || '').replace(/##?\s?/g, '').replace(/\*\*/g, '')}</pre>
+                  <div style={{ maxWidth: '100%', overflow: 'hidden', wordBreak: 'break-word', height: '100%' }}>
+                    <pre className="whitespace-pre-wrap text-sm" style={{ maxWidth: '100%', height: '100%' }}>{(typeof analysisResults === 'string' ? analysisResults : String(analysisResults)).replace(/##?\s?/g, '').replace(/\*\*/g, '')}</pre>
+                  </div>
                 )}
                 {!isAnalyzing && !analysisResults && (
                   <div className="flex items-center justify-center h-full text-gray-400">
@@ -370,7 +402,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
           </div>
 
           {/* Right Panel - Chat */}
-          <div className="metallic-brush-right-panel">
+          <div className="metallic-brush-right-panel scrollbar-hide" style={{ flex: '4', minWidth: '320px', maxWidth: '520px', overflow: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
             <div className="metallic-brush-chat-header">
               <h2 className="text-xl font-semibold">Chat Analysis</h2>
               <div className="metallic-brush-model-selector">
@@ -399,24 +431,27 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
             
 
 
-            <div className="metallic-brush-chat-messages">
-              {messages.map((message, index) => (
-                <div 
-                  key={message.id || index}
-                  className={`metallic-brush-message ${message.sender} ${message.sender === 'user' ? 'right' : 'left'}`}
-                >
-                  <span className="chat-icon">
-                    {message.sender === 'user' ? <User size={20} className="user-icon" /> : <Bot size={20} className="ai-icon" />}
-                  </span>
-                  <span className="chat-text">{message.text.replace(/##?\s?/g, '').replace(/\*\*/g, '')}</span>
-                </div>
-              ))}
-              {isLoading && (
-                <div className="metallic-brush-message assistant metallic-brush-thinking">
-                  <span className="thinking-dot">Thinking<span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span></span>
-                </div>
-              )}
-              {messages.length > 0 && <div ref={messagesEndRef} />}
+            <div className="metallic-brush-chat-messages scrollbar-hide" style={{ height: '300px', maxHeight: '545px', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+              <div className="chat-messages-container" style={{ maxWidth: '100%' }}>
+                {messages.map((message, index) => (
+                  <div 
+                    key={message.id || index}
+                    className={`metallic-brush-message ${message.sender} ${message.sender === 'user' ? 'right' : 'left'}`}
+                    style={{ maxWidth: '90%', wordBreak: 'break-word' }}
+                  >
+                    <span className="chat-icon">
+                      {message.sender === 'user' ? <User size={20} className="user-icon" /> : <Bot size={20} className="ai-icon" />}
+                    </span>
+                    <span className="chat-text" style={{ maxWidth: '100%', overflowWrap: 'break-word' }}>{(typeof message.text === 'string' ? message.text : String(message.text || '')).replace(/##?\s?/g, '').replace(/\*\*/g, '')}</span>
+                  </div>
+                ))}
+                {isLoading && (
+                  <div className="metallic-brush-message assistant metallic-brush-thinking">
+                    <span className="thinking-dot">Thinking<span className="dot-1">.</span><span className="dot-2">.</span><span className="dot-3">.</span></span>
+                  </div>
+                )}
+              </div>
+              <div ref={messagesEndRef} style={{ height: 0, overflow: 'hidden' }} />
             </div>
 
             <div className="metallic-brush-new-conversation" onClick={() => handleNewConversation(true)}>
@@ -443,6 +478,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
               >
                 <Send size={18} />
               </button>
+            </div>
             </div>
           </div>
         </div>
