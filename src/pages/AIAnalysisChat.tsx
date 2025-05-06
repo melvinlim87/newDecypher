@@ -263,9 +263,9 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
   return (
     <div className="metallic-brush-theme metallic-brush-container" style={{ marginTop: 0, position: 'relative', zIndex: 30, height: 'calc(100vh - 64px)' }}>
       {/* Main Content */}
-      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative', overflow: 'hidden' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%', position: 'relative', overflow: 'hidden', minHeight: '100vh' }}>
         {/* Fixed Header - Always visible */}
-        <div style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'rgba(30, 41, 59, 0.95)', borderBottom: '1px solid rgba(148, 163, 184, 0.3)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)' }}>
+        <div style={{ position: 'sticky', top: 0, zIndex: 50, backgroundColor: 'rgba(30, 41, 59, 0.95)', borderBottom: '1px solid rgba(148, 163, 184, 0.3)', boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.2)', flexShrink: 0, height: '80px' }}>
           <div className="metallic-brush-main-header" style={{ padding: '1.25rem 1.5rem' }}>
             <div className="metallic-brush-main-title">
               <BarChart2 size={24} className="mr-2" />
@@ -275,16 +275,16 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
         </div>
         
         {/* Scrollable Content Area - Fixed height, no scrolling */}
-        <div style={{ flex: 1, overflow: 'hidden', paddingTop: '10px', position: 'relative', zIndex: 30, height: 'calc(100vh - 64px - 60px)', maxHeight: 'calc(100vh - 64px - 60px)' }} className="scrollbar-hide">
-          <div className="metallic-brush-content" style={{ display: 'flex', flexWrap: 'nowrap', height: '100%', maxHeight: '100%' }}>
+        <div style={{ flex: 1, overflow: 'hidden', paddingTop: '10px', position: 'relative', zIndex: 30, height: 'calc(100vh - 80px)', minHeight: 'calc(100vh - 80px)' }} className="scrollbar-hide">
+          <div className="metallic-brush-content" style={{ display: 'flex', flexWrap: 'nowrap', height: '100%', maxHeight: '100%', minHeight: '100%' }}>
           {/* Left Panel - Chart Upload */}
-          <div className="metallic-brush-left-panel scrollbar-hide" style={{ flex: '6', minWidth: '0', overflow: 'auto', position: 'relative', zIndex: 20, scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+          <div className="metallic-brush-left-panel scrollbar-hide" style={{ flex: '6', minWidth: '0', overflow: 'auto', position: 'relative', zIndex: 20, scrollbarWidth: 'none', msOverflowStyle: 'none', display: 'flex', flexDirection: 'column', height: '100%' }}>
             <div className="flex justify-between items-center mb-4">
               <h2 className="text-xl font-semibold">Chart Upload</h2>
               {/* Close button removed */}
             </div>
             
-            <div className="metallic-brush-instructions">
+            <div className="metallic-brush-instructions" style={{ flexShrink: 0 }}>
               <p><strong>AI Chart Analyzer Instructions:</strong></p>
               <div className="instructions-grid" style={{ maxWidth: '100%', overflow: 'hidden' }}>
                 <div className="instructions-column" style={{ width: '100%' }}>
@@ -317,7 +317,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
             </div>
 
             {/* Chart Upload Section - moved here */}
-            <div className="metallic-brush-upload-outer">
+            <div className="metallic-brush-upload-outer" style={{ flexShrink: 0 }}>
               <div className="metallic-brush-upload-dropzone">
                 {!uploadedImage && (
                   <label className="metallic-brush-upload-label">
@@ -350,7 +350,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
 
 
 
-            <div className="metallic-brush-indicators-list">
+            <div className="metallic-brush-indicators-list" style={{ flexShrink: 0 }}>
               <h3 className="text-sm font-medium">Supported Technical Indicators:</h3>
               <p className="text-xs text-gray-400 mb-2">The analyzer has been optimized for these specific indicators:</p>
               <div className="indicators-grid">
@@ -368,8 +368,8 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
               <p className="text-xs text-gray-400 mt-2">Other indicators may not work as expected.</p>
             </div>
 
-            <div className="metallic-brush-analysis-results">
-              <div className="metallic-brush-analysis-header">
+            <div className="metallic-brush-analysis-results" style={{ flexShrink: 0, flexGrow: 1, display: 'flex', flexDirection: 'column' }}>
+              <div className="metallic-brush-analysis-header" style={{ flexShrink: 0 }}>
                 <h2 className="text-xl font-semibold">Analysis Results</h2>
                 {analysisResults && (
                   <button 
@@ -380,7 +380,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                   </button>
                 )}
               </div>
-              <div className="metallic-brush-analysis-content" style={{ height: '300px', maxHeight: '300px' }}>
+              <div className="metallic-brush-analysis-content" style={{ flex: 1, minHeight: '200px', overflow: 'auto', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
                 {isAnalyzing && (
                   <div className="flex flex-col items-center justify-center h-full">
                     <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-2"></div>
@@ -394,7 +394,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
                 )}
                 {!isAnalyzing && !analysisResults && (
                   <div className="flex items-center justify-center h-full text-gray-400">
-                    <p>Upload a chart image to see the analysis here</p>
+                    <p style={{ textAlign: 'center' }}>Upload a chart image to see the analysis here</p>
                   </div>
                 )}
               </div>
@@ -402,8 +402,8 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
           </div>
 
           {/* Right Panel - Chat */}
-          <div className="metallic-brush-right-panel scrollbar-hide" style={{ flex: '4', minWidth: '320px', maxWidth: '520px', overflow: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
-            <div className="metallic-brush-chat-header">
+          <div className="metallic-brush-right-panel scrollbar-hide" style={{ flex: '4', minWidth: '320px', maxWidth: '520px', overflow: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none', height: '100%', maxHeight: '100%' }}>
+            <div className="metallic-brush-chat-header" style={{ flexShrink: 0 }}>
               <h2 className="text-xl font-semibold">Chat Analysis</h2>
               <div className="metallic-brush-model-selector">
                 <div className="flex items-center">
@@ -431,7 +431,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
             
 
 
-            <div className="metallic-brush-chat-messages scrollbar-hide" style={{ height: '300px', maxHeight: '545px', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
+            <div className="metallic-brush-chat-messages scrollbar-hide" style={{ flex: 1, minHeight: '200px', maxHeight: 'calc(100% - 200px)', overflowY: 'auto', scrollbarWidth: 'none', msOverflowStyle: 'none' }}>
               <div className="chat-messages-container" style={{ maxWidth: '100%' }}>
                 {messages.map((message, index) => (
                   <div 
@@ -454,12 +454,12 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
               <div ref={messagesEndRef} style={{ height: 0, overflow: 'hidden' }} />
             </div>
 
-            <div className="metallic-brush-new-conversation" onClick={() => handleNewConversation(true)}>
+            <div className="metallic-brush-new-conversation" onClick={() => handleNewConversation(true)} style={{ flexShrink: 0, marginTop: 'auto' }}>
               <MessageSquare size={16} />
               <span>New Conversation</span>
             </div>
 
-            <div className="metallic-brush-chat-input">
+            <div className="metallic-brush-chat-input" style={{ flexShrink: 0 }}>
               <textarea
                 placeholder="Type your message..."
                 value={inputMessage}
