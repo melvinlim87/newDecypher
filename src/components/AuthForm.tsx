@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import { FIREBASE_LOGIN_URL } from '../config';
 import { auth } from '../lib/firebase';
 import { 
@@ -197,17 +198,29 @@ export function AuthForm({ type }: AuthFormProps) {
         // 2. Get Firebase ID token
         const idToken = await userCredential.user.getIdToken();
         // 3. Exchange for Sanctum token
-        const res = await fetch(FIREBASE_LOGIN_URL, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ idToken }),
-        });
-        const data = await res.json();
-        if (data.access_token) {
-          localStorage.setItem('sanctum_token', data.access_token);
-          navigate('/');
-        } else {
-          setError('Failed to authenticate with backend.');
+        try {
+          console.log('Calling firebase-login endpoint with token');
+          const res = await axios.post(FIREBASE_LOGIN_URL, 
+            { idToken },
+            { 
+              headers: { 
+                'Content-Type': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+              }
+            }
+          );
+          
+          console.log('Login response:', res.data);
+          // Type check for access_token
+          if (res.data && typeof res.data === 'object' && 'access_token' in res.data) {
+            localStorage.setItem('sanctum_token', res.data.access_token as string);
+            navigate('/');
+          } else {
+            setError('Failed to authenticate with backend: No access token received');
+          }
+        } catch (loginError: any) { // Type assertion for error
+          console.error('Login error details:', loginError);
+          setError(`Backend authentication failed: ${loginError?.message || 'Unknown error'}`);
         }
       }
     } catch (err) {
