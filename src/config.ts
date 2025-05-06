@@ -1,22 +1,18 @@
-// Global configuration file for API endpoints
-// This file centralizes all API URLs to make deployment easier
-
-// Set this to true for production builds
 const IS_PRODUCTION = true;
 
 // Base API URL
 export const API_BASE_URL = IS_PRODUCTION 
-  ? 'https://ai.decyphers.com/api'
+  ? 'https://api.decyphers.com/api'
   : 'http://localhost:8000/api';
 
 // Chart API URL
 export const CHART_API_URL = IS_PRODUCTION
-  ? 'https://ai.decyphers.com/api/chart'
+  ? 'https://api.decyphers.com/api/chart'
   : 'http://localhost:8888/.netlify/functions/chart-proxy';
 
 // Yahoo Finance API URL
 export const YAHOO_API_URL = IS_PRODUCTION
-  ? 'https://ai.decyphers.com/api'
+  ? 'https://api.decyphers.com/api'
   : 'http://localhost:3005';
 
 // OpenRouter API URL
