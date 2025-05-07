@@ -489,75 +489,79 @@ export function EAGenerator() {
    };
  
    const handleSubmit = async (e: React.FormEvent, imageData?: string) => {
-     e.preventDefault();
-     if ((!input.trim() && !attachedImage) || isGenerating) {
-       return;
-     }
+    e.preventDefault();
+    if ((!input.trim() && !attachedImage) || isGenerating) {
+      return;
+    }
  
-     setIsGenerating(true);
-     const newUserMessage = { 
-       role: 'user' as const, 
-       content: input.trim() || 'Please analyze this chart',
-       image: attachedImage || imageData
-     };
+    setIsGenerating(true);
+    const newUserMessage = { 
+      role: 'user' as const, 
+      content: input.trim() || 'Please analyze this chart',
+      image: attachedImage || imageData
+    };
  
-     setInput('');
-     setMessages(prev => [...prev, newUserMessage]);
+    setInput('');
+    setMessages(prev => [...prev, newUserMessage]);
  
-     // Clear the attached image after sending
-     if (attachedImage) {
-       setAttachedImage(null);
-       setImagePreview(null);
-     }
+    // Clear the attached image after sending
+    if (attachedImage) {
+      setAttachedImage(null);
+      setImagePreview(null);
+    }
  
-     // Get previous messages for context, excluding the welcome message
-     const contextMessages = messages.slice(1).slice(-4);
+    // Get previous messages for context, excluding the welcome message
+    const contextMessages = messages.slice(1).slice(-4);
  
-     try {
-        // Compose messages array for backend
-        const backendMessages = [
-          ...messages.slice(1).slice(-4), // previous context
-          newUserMessage
-        ];
-        const response: BackendEAResponse = await sendChatMessageBackend(backendMessages, selectedModel);
+    try {
+      // Compose messages array for backend
+      const backendMessages = [
+        ...messages.slice(1).slice(-4), // previous context
+        newUserMessage
+      ];
+      const response: BackendEAResponse = await sendChatMessageBackend(backendMessages, selectedModel);
+      
+      if (!response || (typeof response !== 'object')) {
+        throw new Error('Failed to analyze trading strategy (invalid backend response)');
+      }
+      if ('error' in response && response.error) {
+        throw new Error(response.error || 'Failed to analyze trading strategy');
+      }
+      
+      const replyContent = typeof response.reply === 'string' && response.reply.trim().length > 0
+        ? response.reply
+        : (typeof response.content === 'string' && response.content.trim().length > 0
+          ? response.content
+          : undefined);
+      if (replyContent) {
+        const newAssistantMessage = { role: 'assistant' as const, content: replyContent };
+        setMessages(prev => [...prev, newAssistantMessage]);
         
-        if (!response || (typeof response !== 'object')) {
-          throw new Error('Failed to analyze trading strategy (invalid backend response)');
-        }
-        if ('error' in response && response.error) {
-          throw new Error(response.error || 'Failed to analyze trading strategy');
-        }
-        
-        const replyContent = typeof response.reply === 'string' && response.reply.trim().length > 0
-          ? response.reply
-          : (typeof response.content === 'string' && response.content.trim().length > 0
-            ? response.content
-            : undefined);
-        if (replyContent) {
-          const newAssistantMessage = { role: 'assistant' as const, content: replyContent };
-          setMessages(prev => [...prev, newAssistantMessage]);
-        } else {
-          throw new Error('No analysis was generated. Please provide more details about your trading strategy.');
-        }
-     } catch (error) {
-       const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
-       setMessages(prev => [...prev, { 
-         role: 'assistant', 
-         content: `${errorMessage}\n\nTo help you better, please provide complete strategy details:\n
- 1. INDICATOR SETTINGS\n   - Moving Average periods (SMA/EMA)\n   - RSI period and levels\n   - Bollinger Bands settings
+        // No need to manually save to Firebase here
+        // The useEffect hook at lines ~247-289 will automatically save
+        // when the messages state updates
+      } else {
+        throw new Error('No analysis was generated. Please provide more details about your trading strategy.');
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setMessages(prev => [...prev, { 
+        role: 'assistant', 
+        content: `${errorMessage}\n\nTo help you better, please provide complete strategy details:\n
+1. INDICATOR SETTINGS\n   - Moving Average periods (SMA/EMA)\n   - RSI period and levels\n   - Bollinger Bands settings
  
- 2. ENTRY RULES\n   - Specific buy/sell conditions\n   - Required confirmations\n   - Price action patterns
+2. ENTRY RULES\n   - Specific buy/sell conditions\n   - Required confirmations\n   - Price action patterns
  
- 3. EXIT RULES\n   - Take profit targets\n   - Stop loss placement\n   - Trailing stop rules
+3. EXIT RULES\n   - Take profit targets\n   - Stop loss placement\n   - Trailing stop rules
  
- 4. RISK MANAGEMENT\n   - Risk per trade\n   - Trading sessions\n   - Maximum spread
+4. RISK MANAGEMENT\n   - Risk per trade\n   - Trading sessions\n   - Maximum spread
  
- Example: "I want to trade using 20 EMA and 50 SMA with RSI(14). Buy when EMA crosses above SMA and RSI > 40. Sell when EMA crosses below SMA and RSI < 60. Use 2% risk per trade, 50 pip SL, 100 pip TP. Only trade during London/NY overlap with max 5 pip spread."`
-       }]);
-     } finally {
-       setIsGenerating(false);
-     }
-   };
+Example: "I want to trade using 20 EMA and 50 SMA with RSI(14). Buy when EMA crosses above SMA and RSI > 40. Sell when EMA crosses below SMA and RSI < 60. Use 2% risk per trade, 50 pip SL, 100 pip TP. Only trade during London/NY overlap with max 5 pip spread."`
+      }]);
+    } finally {
+      setIsGenerating(false);
+    }
+  };
  
    const copyToClipboard = (text: string) => {
      const codeMatch = text.match(/```(?:mql4|mql5)?\n([\s\S]*?)```/);
