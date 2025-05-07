@@ -5,6 +5,7 @@ import { auth } from '../lib/firebase';
 import { N8nChatWidget } from './N8nChatWidget';
 import { useTheme } from '../contexts/ThemeContext';
 import { VerticalCircuitLines } from './VerticalCircuitLines';
+import { useSidebarState } from '../contexts/SidebarContext';
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ export function Layout({ children }: LayoutProps) {
   const [showChat, setShowChat] = useState(false);
   const [user, setUser] = useState<any>(auth.currentUser);
   const { theme } = useTheme();
+  const { isCollapsed } = useSidebarState();
 
   // Check for Telegram login
   const checkTelegramLogin = () => {
@@ -92,7 +94,7 @@ export function Layout({ children }: LayoutProps) {
       <div className="flex flex-1 overflow-hidden relative z-40" style={{ marginTop: 90, position: 'relative', zIndex: 40, height: 'calc(100vh - 90px)' }}>
         {/* Sidebar - only render when authenticated and on medium screens and larger */}
         {!isAuthPage && user && (
-          <div className="hidden md:block flex-none h-full" style={{ height: 'calc(100vh - 90px)', overflow: 'auto', position: 'fixed', top: '90px', left: 0, width: '16rem', zIndex: 45 }}>
+          <div className="hidden md:block flex-none h-full" style={{ height: 'calc(100vh - 90px)', overflow: 'auto', position: 'fixed', top: '90px', left: 0, width: isCollapsed ? '4rem' : '16rem', zIndex: 45, transition: 'width 0.3s ease-in-out' }}>
             <SideBar />
           </div>
         )}
@@ -105,7 +107,8 @@ export function Layout({ children }: LayoutProps) {
             height: 'calc(100vh - 90px)', 
             position: 'relative', 
             marginTop: 0,
-            marginLeft: user ? '16rem' : 0
+            marginLeft: user ? (isCollapsed ? '4rem' : '16rem') : 0,
+            transition: 'margin-left 0.3s ease-in-out'
           }}
         >
           <div className="w-full min-h-full">
