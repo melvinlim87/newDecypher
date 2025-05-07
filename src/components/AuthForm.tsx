@@ -406,6 +406,8 @@ export function AuthForm({ type }: AuthFormProps) {
     setError(null);
     setSuccess(null);
     setGoogleLoading(true);
+    
+    console.log('Starting Google sign-in process');
 
     // Temporarily override console.error to suppress Firebase Auth popup warnings
     const originalConsoleError = console.error;
@@ -424,9 +426,26 @@ export function AuthForm({ type }: AuthFormProps) {
       // Clear any existing session data
       sessionStorage.clear();
       
+      // Configure Google provider with custom parameters
       const provider = new GoogleAuthProvider();
+      
+      // Add scopes for Google provider
+      provider.addScope('email');
+      provider.addScope('profile');
+      
+      // Set custom parameters
+      provider.setCustomParameters({
+        prompt: 'select_account'
+      });
+      
+      console.log('Initialized Google provider, attempting sign-in popup');
+      
+      // Attempt sign-in with popup
       const result = await signInWithPopup(auth, provider);
+      console.log('Google sign-in successful');
+      
       const user = result.user;
+      console.log('User authenticated:', user.email);
       
       // Check if this is a new user (first time sign-in)
       const isNewUser = result._tokenResponse?.isNewUser;
@@ -514,12 +533,31 @@ export function AuthForm({ type }: AuthFormProps) {
       
       navigate('/');
     } catch (err) {
-      // Only show user-facing error, don't log to console
-      setError(
-        err instanceof Error 
-          ? err.message.replace('Firebase: ', '') 
-          : 'Google authentication failed'
-      );
+      console.error('Google sign-in error:', err);
+      
+      // Check for specific Firebase errors
+      if (err instanceof Error) {
+        const errorCode = (err as any).code;
+        const errorMessage = err.message;
+        
+        console.log('Error code:', errorCode);
+        console.log('Error message:', errorMessage);
+        
+        // Handle specific error cases
+        if (errorCode === 'auth/popup-closed-by-user') {
+          setError('Sign-in popup was closed. Please try again.');
+        } else if (errorCode === 'auth/popup-blocked') {
+          setError('Sign-in popup was blocked by your browser. Please allow popups for this site.');
+        } else if (errorCode === 'auth/cancelled-popup-request') {
+          setError('Multiple popup requests were made. Please try again.');
+        } else if (errorCode === 'auth/network-request-failed') {
+          setError('Network error. Please check your internet connection and try again.');
+        } else {
+          setError(errorMessage.replace('Firebase: ', ''));
+        }
+      } else {
+        setError('Google authentication failed. Please try again.');
+      }
     } finally {
       setGoogleLoading(false);
       // Restore original console.error
