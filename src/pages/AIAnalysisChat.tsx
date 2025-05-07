@@ -3,6 +3,7 @@ import { MessageSquare, Send, Cloud, Upload, BarChart2, HelpCircle, TrendingUp, 
 import { useLocation } from 'react-router-dom';
 import '../styles/metallicBrushTheme.css';
 import { sendChatMessageBackend, getAvailableModels } from '../services/backendApi';
+import { auth, saveChatAnalysis } from '../lib/firebase';
 
 type ChatMessage = {
   id?: string;
@@ -176,14 +177,34 @@ const MetallicBrushAnalyzerUI: React.FC = () => {
       );
       // Assume response is a string or { reply: string }
       const assistantText = typeof response === 'string' ? response : (response.reply || '');
-      setMessages((prev) => [...prev, { sender: 'assistant', text: assistantText }]);
+      const assistantMessage: ChatMessage = { sender: 'assistant', text: assistantText };
+      setMessages((prev) => [...prev, assistantMessage]);
+      
+      // Save chat messages to Firebase if user is authenticated
+      if (auth.currentUser) {
+        try {
+          const firebaseMessages = chatHistory.concat([{ role: 'assistant', content: assistantText }]);
+          await saveChatAnalysis(auth.currentUser.uid, {
+            analysis: analysisResults,
+            messages: firebaseMessages,
+            timeframe: locationState?.timeframe || null,
+            chartUrls: locationState?.chartUrls || [],
+            timestamp: Date.now(),
+            model: selectedModel
+          });
+          console.log('Chat saved to Firebase successfully');
+        } catch (saveError) {
+          console.error('Error saving chat to Firebase:', saveError);
+        }
+      } else {
+        console.log('User not authenticated, chat not saved to Firebase');
+      }
     } catch (err) {
-      setMessages((prev) => [...prev, { sender: 'assistant', text: 'Sorry, there was an error. Please try again.' }]);
+      setMessages((prev) => [...prev, { sender: 'assistant' as const, text: 'Sorry, there was an error. Please try again.' }]);
     } finally {
       setIsLoading(false);
-    }
+    }  
   };
-
 
   const handleNewConversation = (addWelcomeMessage = true) => {
     // Clear all state instead of reloading the page
