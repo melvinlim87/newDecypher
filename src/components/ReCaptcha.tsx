@@ -139,10 +139,14 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) 
               recaptchaRef.current.innerHTML = '';
             }
             
+            // Use a direct callback function instead of a global function name
             const id = window.grecaptcha.render(recaptchaRef.current, {
               'sitekey': siteKey,
               'theme': 'dark',
-              'callback': 'onRecaptchaVerify'
+              'callback': (token: string) => {
+                console.log('Direct callback received token:', token);
+                handleVerify(token);
+              }
             });
             setWidgetId(id);
             setRendered(true);
