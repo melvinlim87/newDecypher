@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState, useRef } from 'react';
+import React, { useEffect, useCallback, useState, useRef, memo } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -20,7 +20,7 @@ declare global {
   }
 }
 
-export const ReCaptcha: React.FC<ReCaptchaProps> = ({ onVerify, onError }) => {
+export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) => {
   const [siteKey, setSiteKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
@@ -187,4 +187,9 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = ({ onVerify, onError }) => {
       />
     </div>
   );
-};
+}, () => {
+  // This prevents re-renders when parent component changes
+  // We always return true to ensure the component never re-renders
+  // when parent components change state (like typing in input fields)
+  return true; // Always use the same instance
+});
