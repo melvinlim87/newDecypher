@@ -59,9 +59,8 @@
   min-height: 120px;
   border: 2px dashed var(--blue-highlight);
   border-radius: 18px;
-  background: var(--blue-card-bg);
-  box-shadow: 0 0 18px 0 rgba(29, 78, 216, 0.12), 0 1.5px 6px 0 rgba(0,0,0,0.18);
-  display: flex;
+  background-color: rgba(30, 41, 59, 0.5);
+  
   align-items: center;
   justify-content: center;
   flex-direction: column;
@@ -166,8 +165,8 @@
 .metallic-brush-main-header {
   padding: 1.25rem 1.5rem;
   border-bottom: 1px solid var(--silver-card-border);
-  background-color: rgba(30, 41, 59, 0.8);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  background-color: rgb(77 84 98 / 80%);
+    background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
   background-blend-mode: overlay;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
 }
@@ -349,8 +348,7 @@
   margin-top: 1rem;
   margin-bottom: 1rem;
   padding: 0.75rem;
-  background-color: rgba(30, 41, 59, 0.5);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+ 
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   font-size: 0.875rem;
@@ -397,7 +395,7 @@
 .metallic-brush-analysis-content {
   padding: 1rem;
   background-color: rgba(30, 41, 59, 0.5);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   height: 200px;
@@ -428,7 +426,7 @@
   overflow-y: auto;
   min-height: 200px;
   background-color: rgba(15, 23, 42, 0.5);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+ 
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   margin-bottom: 1rem;
@@ -518,7 +516,7 @@
 }
 
 .metallic-brush-message.assistant {
-  background-color: rgba(15, 23, 42, 0.8);
+  background-color: rgba(49, 148, 203, 0.8);
   align-self: flex-start;
   margin-right: auto;
 }
@@ -532,7 +530,7 @@
   padding: 0.5rem;
   margin-bottom: 1rem;
   background-color: rgba(30, 41, 59, 0.6);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   cursor: pointer;
@@ -542,7 +540,7 @@
 }
 
 .metallic-brush-new-conversation:hover {
-  background-color: rgba(30, 41, 59, 0.8);
+  background-color: rgba(54, 119, 59, 0.8);
 }
 
 .metallic-brush-chat-input {
@@ -551,7 +549,7 @@
   gap: 0.5rem;
   padding: 0.75rem;
   background-color: rgba(30, 41, 59, 0.6);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+ 
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   border: 1px solid rgba(148, 163, 184, 0.3);
@@ -639,7 +637,7 @@
   margin-bottom: 0.5rem;
   padding: 0.5rem 1rem 0.25rem;
   background-color: rgba(30, 41, 59, 0.5);
-  background-image: var(--metallic-brush-texture), linear-gradient(135deg, var(--dark-bg), var(--dark-panel));
+  
   background-blend-mode: overlay;
   border-radius: 0.5rem;
   font-size: 1.125rem;
