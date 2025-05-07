@@ -183,9 +183,12 @@ export function AuthForm({ type }: AuthFormProps) {
 
       if (type === 'register') {
         // Additional security checks for registration
+        console.log('Checking recaptchaToken before submission:', recaptchaToken);
         if (!recaptchaToken) {
+          console.error('recaptchaToken is null or empty');
           throw new Error('Please complete the reCAPTCHA verification');
         }
+        console.log('recaptchaToken is valid, proceeding with verification');
         
         // Check for common SQL injection patterns
         const sqlInjectionPattern = /('|--|;|\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)/i;
@@ -784,10 +787,16 @@ export function AuthForm({ type }: AuthFormProps) {
             <div className="relative z-0 my-6">
               <ReCaptcha
                 onVerify={(token) => {
+                  console.log('AuthForm received token:', token);
+                  console.log('Token length in AuthForm:', token.length);
                   setRecaptchaToken(token);
                   setError(null);
+                  console.log('Token stored in state:', token);
                 }}
-                onError={(error) => setError(error)}
+                onError={(error) => {
+                  console.error('ReCaptcha error in AuthForm:', error);
+                  setError(error);
+                }}
               />
             </div>
           )}

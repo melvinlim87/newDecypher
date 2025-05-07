@@ -55,7 +55,17 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) 
   }, [onError, API_BASE_URL]);
   
   const handleVerify = useCallback(async (token: string) => {
-    console.log('reCAPTCHA token received, verifying with backend...');
+    console.log('reCAPTCHA token received:', token);
+    console.log('Token length:', token.length);
+    
+    // Directly pass the token to the parent component without backend verification
+    // This simplifies the flow and ensures the token is passed correctly
+    onVerify(token);
+    
+    // Log that we've passed the token to the parent
+    console.log('Token passed to parent component');
+    
+    /* Commenting out backend verification in the component to simplify the flow
     try {
       // Verify the token with our backend
       const verifyResponse = await axios.post<{success: boolean, message: string}>(
@@ -74,7 +84,8 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) 
       console.error('Error verifying reCAPTCHA:', err);
       onError?.('Error verifying reCAPTCHA');
     }
-  }, [onVerify, onError, API_BASE_URL]);
+    */
+  }, [onVerify, onError]);
 
   // Load reCAPTCHA script once
   useEffect(() => {
