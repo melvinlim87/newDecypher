@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import DOMPurify from 'dompurify';
 import axios from 'axios';
-import { FIREBASE_LOGIN_URL } from '../config';
+import { FIREBASE_LOGIN_URL, API_BASE_URL } from '../config';
 import { auth } from '../lib/firebase';
 import { 
   createUserWithEmailAndPassword, 
@@ -193,18 +193,20 @@ export function AuthForm({ type }: AuthFormProps) {
           throw new Error('Invalid input detected');
         }
 
-        // Verify reCAPTCHA token
-        const verifyResponse = await fetch('/.netlify/functions/verify-recaptcha', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ token: recaptchaToken }),
-        });
-
-        const verifyResult = await verifyResponse.json();
-        if (!verifyResponse.ok || !verifyResult.success) {
-          throw new Error(verifyResult.error || 'reCAPTCHA verification failed');
+        // Verify reCAPTCHA token using our backend API
+        try {
+          const verifyResponse = await axios.post<{success: boolean, message: string}>(`${API_BASE_URL}/verify-recaptcha`, {
+            token: recaptchaToken
+          });
+          
+          if (!verifyResponse.data.success) {
+            throw new Error(verifyResponse.data.message || 'reCAPTCHA verification failed');
+          }
+          
+          console.log('reCAPTCHA verification successful');
+        } catch (err: any) {
+          console.error('reCAPTCHA verification error:', err);
+          throw new Error(err.response?.data?.message || 'reCAPTCHA verification failed');
         }
       }
 
