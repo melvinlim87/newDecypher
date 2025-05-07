@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import DOMPurify from 'dompurify';
 import axios from 'axios';
 import { FIREBASE_LOGIN_URL } from '../config';
 import { auth } from '../lib/firebase';
@@ -56,7 +57,17 @@ export function AuthForm({ type }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   
+  // Validation states
+  const [emailValid, setEmailValid] = useState<boolean | null>(null);
+  const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
+  const [nameValid, setNameValid] = useState<boolean | null>(null);
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null);
+  
   const { theme } = useTheme();
+  
+  // Regex patterns for validation
+  const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -81,24 +92,105 @@ export function AuthForm({ type }: AuthFormProps) {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [type]);
 
+  // Sanitize input to prevent XSS attacks
+  const sanitizeInput = (input: string): string => {
+    return DOMPurify.sanitize(input.trim());
+  };
+  
+  // Validate email with regex
+  const validateEmail = (email: string): boolean => {
+    return EMAIL_REGEX.test(email);
+  };
+  
+  // Validate password strength
+  const validatePassword = (password: string): boolean => {
+    return PASSWORD_REGEX.test(password);
+  };
+  
+  // Calculate password strength
+  const calculatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+    let score = 0;
+    
+    // Length check
+    if (password.length >= 8) score += 1;
+    if (password.length >= 12) score += 1;
+    
+    // Complexity checks
+    if (/[a-z]/.test(password)) score += 1; // lowercase
+    if (/[A-Z]/.test(password)) score += 1; // uppercase
+    if (/\d/.test(password)) score += 1;    // numbers
+    if (/[^a-zA-Z\d]/.test(password)) score += 1; // special chars
+    
+    // Determine strength based on score
+    if (score < 3) return 'weak';
+    if (score < 5) return 'medium';
+    return 'strong';
+  };
+  
+  // Handle input changes with validation
+  const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setEmail(value);
+    setEmailValid(validateEmail(value));
+  };
+  
+  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setPassword(value);
+    setPasswordValid(validatePassword(value));
+    setPasswordStrength(calculatePasswordStrength(value));
+  };
+  
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    setName(value);
+    setNameValid(value.length >= 2);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
     setSuccess('');
+    
+    // Validate all inputs before submission
+    if (type === 'register') {
+      if (!nameValid && name.trim()) {
+        setError('Please enter a valid name (at least 2 characters)');
+        return;
+      }
+      
+      if (!emailValid) {
+        setError('Please enter a valid email address');
+        return;
+      }
+      
+      if (!passwordValid) {
+        setError('Password must be at least 8 characters and include uppercase, lowercase, number, and special character');
+        return;
+      }
+    }
+    
     setLoading(true);
 
     const form = e.currentTarget as HTMLFormElement;
     const formData = new FormData(form);
-    const email = formData.get('email') as string;
-    const password = formData.get('password') as string;
+    const email = sanitizeInput(formData.get('email') as string);
+    const password = formData.get('password') as string; // Don't sanitize password to preserve special characters
 
     try {
       // Clear any existing session data
       sessionStorage.clear();
 
       if (type === 'register') {
+        // Additional security checks for registration
         if (!recaptchaToken) {
           throw new Error('Please complete the reCAPTCHA verification');
+        }
+        
+        // Check for common SQL injection patterns
+        const sqlInjectionPattern = /('|--|;|\b(ALTER|CREATE|DELETE|DROP|EXEC(UTE){0,1}|INSERT( +INTO){0,1}|MERGE|SELECT|UPDATE|UNION( +ALL){0,1})\b)/i;
+        if (sqlInjectionPattern.test(email) || sqlInjectionPattern.test(name)) {
+          throw new Error('Invalid input detected');
         }
 
         // Verify reCAPTCHA token
@@ -592,12 +684,19 @@ export function AuthForm({ type }: AuthFormProps) {
                 <input
                   type="text"
                   value={name}
-                  onChange={(e) => setName(e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border border-gray-700/50 group-hover:border-[#0085d7]/30"
+                  onChange={handleNameChange}
+                  className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border ${nameValid === false ? 'border-red-500' : nameValid === true ? 'border-green-500' : 'border-gray-700/50'} group-hover:border-[#0085d7]/30`}
                   style={{ fontSize: 'calc(1rem + 6px)' }}
                   placeholder="Your name"
                   name="name"
+                  minLength={2}
+                  maxLength={50}
+                  pattern="[A-Za-z0-9 ]{2,50}"
+                  title="Name must be at least 2 characters"
                 />
+                {nameValid === false && (
+                  <p className="text-red-500 text-xs mt-1">Name must be at least 2 characters</p>
+                )}
               </div>
             </div>
           )}
@@ -611,13 +710,18 @@ export function AuthForm({ type }: AuthFormProps) {
               <input
                 type="email"
                 value={email} 
-                onChange={(e) => setEmail(e.target.value)} 
+                onChange={handleEmailChange} 
                 required
-                className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border border-gray-700/50 group-hover:border-[#0085d7]/30"
+                className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border ${emailValid === false ? 'border-red-500' : emailValid === true ? 'border-green-500' : 'border-gray-700/50'} group-hover:border-[#0085d7]/30`}
                 style={{ fontSize: '1rem' }}
                 placeholder="you@example.com"
                 name="email"
+                pattern="[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
+                title="Please enter a valid email address"
               />
+              {emailValid === false && (
+                <p className="text-red-500 text-xs mt-1">Please enter a valid email address</p>
+              )}
             </div>
           </div>
 
@@ -630,13 +734,30 @@ export function AuthForm({ type }: AuthFormProps) {
               <input
                 type="password"
                 value={password} 
-                onChange={(e) => setPassword(e.target.value)} 
+                onChange={handlePasswordChange} 
                 required
-                className="w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border border-gray-700/50 group-hover:border-[#0085d7]/30"
+                className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border ${passwordValid === false && type === 'register' ? 'border-red-500' : passwordValid === true ? 'border-green-500' : 'border-gray-700/50'} group-hover:border-[#0085d7]/30`}
                 style={{ fontSize: '1rem' }}
                 placeholder="••••••••"
                 name="password"
+                minLength={type === 'register' ? 8 : 1}
+                title="Password must be at least 8 characters and include uppercase, lowercase, number, and special character"
               />
+              {type === 'register' && (
+                <div className="mt-1">
+                  <div className="flex items-center space-x-2 mt-1">
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength === 'weak' ? 'bg-red-500' : 'bg-gray-300'}`}></div>
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength === 'medium' || passwordStrength === 'strong' ? 'bg-yellow-500' : 'bg-gray-300'}`}></div>
+                    <div className={`h-1 flex-1 rounded-full ${passwordStrength === 'strong' ? 'bg-green-500' : 'bg-gray-300'}`}></div>
+                    <span className="text-xs" style={{ color: passwordStrength === 'weak' ? '#f56565' : passwordStrength === 'medium' ? '#ecc94b' : passwordStrength === 'strong' ? '#48bb78' : 'white' }}>
+                      {passwordStrength ? passwordStrength.charAt(0).toUpperCase() + passwordStrength.slice(1) : 'Password strength'}
+                    </span>
+                  </div>
+                  {passwordValid === false && (
+                    <p className="text-red-500 text-xs mt-1">Password must have 8+ chars with uppercase, lowercase, number, and special character</p>
+                  )}
+                </div>
+              )}
             </div>
             {type === 'login' && (
               <div className="mt-4 text-right">
@@ -666,13 +787,18 @@ export function AuthForm({ type }: AuthFormProps) {
           <div className="relative z-10">
             <button
               type="submit"
-              className="w-full py-3 px-4 rounded-lg font-medium transition-colors cursor-pointer app-button"
+              disabled={
+                loading || 
+                googleLoading || 
+                telegramLoading || 
+                (type === 'register' && (emailValid === false || passwordValid === false || (name.trim().length > 0 && nameValid === false)))
+              }
+              className="w-full py-3 px-4 rounded-lg transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
               style={{
-                background: 'linear-gradient(90deg, rgba(0, 133, 215, 0.3) 0%, rgba(0, 169, 224, 0.3) 100%)',
-                boxShadow: '0 0 15px rgba(0, 169, 224, 0.4)',
-                border: '1px solid rgba(192, 192, 192, 0.5)',
+                background: 'linear-gradient(135deg, #0085d7 0%, #00a9e0 100%)',
                 color: 'white',
-                fontSize: '1.125rem'
+                boxShadow: '0 0 20px rgba(0, 169, 224, 0.3)',
+                fontSize: 'calc(1rem + 2px)'
               }}
             >
               {loading ? (
