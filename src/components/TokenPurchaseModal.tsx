@@ -158,7 +158,7 @@ export function TokenPurchaseModal({ isOpen, onClose }: TokenPurchaseModalProps)
             return (
               <button
                 key={key}
-                onClick={() => handlePurchase(package_.priceId)}
+                onClick={() => handlePurchase(package_.id)}
                 disabled={isLoading}
                 className={`relative flex flex-col justify-between rounded-xl p-4 sm:p-5 transition-all app-card ${
                   isLoading ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:shadow-lg hover:-translate-y-0.5'
