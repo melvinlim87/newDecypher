@@ -33,7 +33,16 @@ export function SideBar({}: SideBarProps) {
       className={`h-full overflow-y-auto scrollbar-hide backdrop-blur-xl transition-all duration-300 metallic-gradient metallic-border metallic-glow ${
         isCollapsed ? 'w-16' : 'w-64'
       }`}
-      style={{ borderTop: 'none', position: 'relative', zIndex: 40, pointerEvents: 'auto', height: '100%', top: 0 }}
+      style={{ 
+        borderTop: 'none', 
+        position: 'fixed', 
+        zIndex: 40, 
+        pointerEvents: 'auto', 
+        height: 'calc(100vh - 90px)', 
+        top: '90px',
+        left: 0,
+        width: isCollapsed ? '4rem' : '16rem'
+      }}
     >
 
 
@@ -147,7 +156,10 @@ export function SideBar({}: SideBarProps) {
       </div>
       
       {/* Collapse button as a footer */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-[#0085d7]/30 metallic-gradient z-50" style={{ boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)' }}>
+      <div className="fixed bottom-0 left-0 border-t border-[#0085d7]/30 metallic-gradient z-50" style={{ 
+        boxShadow: '0 -4px 6px -1px rgba(0, 0, 0, 0.1)', 
+        width: isCollapsed ? '4rem' : '16rem'
+      }}>
         <button
           onClick={() => toggleSidebar()}
           className={`w-full flex items-center ${isCollapsed ? 'justify-center py-4' : 'px-4 py-4'} transition-all duration-300 hover:bg-[#0085d7]/10 cursor-pointer`}

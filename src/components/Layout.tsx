@@ -84,15 +84,15 @@ export function Layout({ children }: LayoutProps) {
       </div>
       
       {/* Fixed navbar at the top */}
-      <div className="flex-none sticky top-0 z-50" style={{ position: 'sticky', top: 0, zIndex: 50 }}>
+      <div className="flex-none fixed top-0 left-0 right-0 z-50" style={{ position: 'fixed', top: 0, zIndex: 50, height: '90px' }}>
         <NavBar />
       </div>
       
       {/* Main content area with sidebar */}
-      <div className="flex flex-1 overflow-hidden relative z-40" style={{ marginTop: 0, position: 'relative', zIndex: 40 }}>
+      <div className="flex flex-1 overflow-hidden relative z-40" style={{ marginTop: 90, position: 'relative', zIndex: 40, height: 'calc(100vh - 90px)' }}>
         {/* Sidebar - only render when authenticated and on medium screens and larger */}
         {!isAuthPage && user && (
-          <div className="hidden md:block flex-none h-full" style={{ height: 'calc(100vh - 64px)', overflow: 'auto' }}>
+          <div className="hidden md:block flex-none h-full" style={{ height: 'calc(100vh - 90px)', overflow: 'auto', position: 'fixed', top: '90px', left: 0, width: '16rem', zIndex: 45 }}>
             <SideBar />
           </div>
         )}
@@ -100,7 +100,13 @@ export function Layout({ children }: LayoutProps) {
         {/* Main content with scrolling */}
         <main 
           className={`flex-1 overflow-y-auto scrollbar-hide`}
-          style={{ zIndex: 30, height: 'calc(100vh - 64px)', position: 'relative', marginTop: 0 }}
+          style={{ 
+            zIndex: 30, 
+            height: 'calc(100vh - 90px)', 
+            position: 'relative', 
+            marginTop: 0,
+            marginLeft: user ? '16rem' : 0
+          }}
         >
           <div className="w-full min-h-full">
             {children}
