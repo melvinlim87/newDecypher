@@ -734,7 +734,7 @@ export function AuthForm({ type }: AuthFormProps) {
               Password
             </label>
             <div className="relative group">
-              <div className="absolute left-3 top-1/3 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
                 <Lock className="w-4 h-4" style={{ color: 'white' }} />
               </div>
               <input
