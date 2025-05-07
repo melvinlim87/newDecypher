@@ -15,7 +15,7 @@ import { database } from '../lib/firebase';
 import { ref, set, get, update } from 'firebase/database';
 import { Mail, Lock, User, Loader2 } from 'lucide-react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { ReCaptcha } from './ReCaptcha';
+import { ReCaptcha, ReCaptchaRef } from './ReCaptcha';
 import { generateUniqueReferralCode } from '../utils/referralUtils';
 import { useTheme } from '../contexts/ThemeContext';
 import TelegramLoginButton from 'react-telegram-login';
@@ -54,6 +54,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
+  const recaptchaRef = useRef<ReCaptchaRef>(null);
   const [resetSent, setResetSent] = useState(false);
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
@@ -360,6 +361,14 @@ export function AuthForm({ type }: AuthFormProps) {
           ? err.message.replace('Firebase: ', '') 
           : 'Authentication failed'
       );
+      setLoading(false);
+      
+      // Reset reCAPTCHA if registration failed
+      if (type === 'register' && recaptchaRef.current) {
+        console.log('Resetting reCAPTCHA after registration failure');
+        recaptchaRef.current.reset();
+        setRecaptchaToken(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -752,7 +761,7 @@ export function AuthForm({ type }: AuthFormProps) {
               Password
             </label>
             <div className="relative group">
-              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
+              <div className="absolute left-3 top-1/3 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
                 <Lock className="w-4 h-4" style={{ color: 'white' }} />
               </div>
               <input
@@ -798,17 +807,15 @@ export function AuthForm({ type }: AuthFormProps) {
 
           {type === 'register' && (
             <div className="relative z-0 my-6">
-              <ReCaptcha
+              <ReCaptcha 
+                ref={recaptchaRef}
                 onVerify={(token) => {
-                  console.log('AuthForm received token:', token);
-                  console.log('Token length in AuthForm:', token.length);
+                  console.log('reCAPTCHA verified, token length:', token.length);
                   setRecaptchaToken(token);
-                  setError(null);
-                  console.log('Token stored in state:', token);
                 }}
                 onError={(error) => {
-                  console.error('ReCaptcha error in AuthForm:', error);
-                  setError(error);
+                  console.error('reCAPTCHA error:', error);
+                  setError('reCAPTCHA verification failed. Please try again.');
                 }}
               />
             </div>

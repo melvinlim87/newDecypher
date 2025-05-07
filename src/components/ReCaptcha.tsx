@@ -1,10 +1,14 @@
-import React, { useEffect, useCallback, useState, useRef, memo } from 'react';
+import { useEffect, useCallback, useState, useRef, memo, forwardRef, useImperativeHandle } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
 interface ReCaptchaProps {
   onVerify: (token: string) => void;
   onError?: (error: string) => void;
+}
+
+export interface ReCaptchaRef {
+  reset: () => void;
 }
 
 declare global {
@@ -20,7 +24,7 @@ declare global {
   }
 }
 
-export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) => {
+export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVerify, onError }, ref) => {
   const [siteKey, setSiteKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
@@ -28,6 +32,16 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) 
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
   const [rendered, setRendered] = useState<boolean>(false);
   const recaptchaRef = useRef<HTMLDivElement>(null);
+  
+  // Expose the reset method to parent components
+  useImperativeHandle(ref, () => ({
+    reset: () => {
+      if (window.grecaptcha && widgetId !== null) {
+        window.grecaptcha.reset(widgetId);
+        console.log('reCAPTCHA has been reset');
+      }
+    }
+  }));
   
   // Fetch the reCAPTCHA site key from the backend
   useEffect(() => {
@@ -178,33 +192,30 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = memo(({ onVerify, onError }) 
 
   if (loading) {
     return (
-      <div className="text-white text-sm flex items-center justify-center">
-        <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-        Loading reCAPTCHA...
+      <div className="recaptcha-container" style={{ marginBottom: '20px' }}>
+        <div className="flex justify-center items-center h-[78px] w-full">
+          <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-300"></div>
+        </div>
       </div>
     );
   }
   
   if (error || !siteKey) {
     return (
-      <div className="text-white text-sm">
-        reCAPTCHA is not properly configured. Please contact support.
+      <div className="recaptcha-container" style={{ marginBottom: '20px' }}>
+        <div className="flex justify-center items-center h-[78px] w-full bg-red-50 border border-red-200 rounded-md">
+          <p className="text-red-500 text-sm">Error loading reCAPTCHA. Please refresh the page.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex justify-center items-center w-full scale-90 origin-center">
+    <div className="recaptcha-container" style={{ marginBottom: '20px' }}>
       <div 
         ref={recaptchaRef} 
-        className="g-recaptcha" 
-        style={{ minHeight: '78px', display: 'flex', justifyContent: 'center' }}
+        className={`g-recaptcha ${(loading || error) ? 'hidden' : ''}`}
       />
     </div>
   );
-}, () => {
-  // This prevents re-renders when parent component changes
-  // We always return true to ensure the component never re-renders
-  // when parent components change state (like typing in input fields)
-  return true; // Always use the same instance
-});
+}), () => true); // Always use the same instance
