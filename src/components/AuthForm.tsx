@@ -680,13 +680,15 @@ export function AuthForm({ type }: AuthFormProps) {
                 Name
               </label>
               <div className="relative group">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'white' }} />
+                <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
+                  <User className="w-4 h-4" style={{ color: 'white' }} />
+                </div>
                 <input
                   type="text"
                   value={name}
                   onChange={handleNameChange}
                   className={`w-full pl-10 pr-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-[#0085d7]/50 app-input transition-all duration-300 border ${nameValid === false ? 'border-red-500' : nameValid === true ? 'border-green-500' : 'border-gray-700/50'} group-hover:border-[#0085d7]/30`}
-                  style={{ fontSize: 'calc(1rem + 6px)' }}
+                  style={{ fontSize: '1rem' }}
                   placeholder="Your name"
                   name="name"
                   minLength={2}
@@ -706,7 +708,9 @@ export function AuthForm({ type }: AuthFormProps) {
               Email
             </label>
             <div className="relative group">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'white' }} />
+              <div className="absolute left-3 top-1/2 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
+                <Mail className="w-4 h-4" style={{ color: 'white' }} />
+              </div>
               <input
                 type="email"
                 value={email} 
@@ -730,7 +734,9 @@ export function AuthForm({ type }: AuthFormProps) {
               Password
             </label>
             <div className="relative group">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5" style={{ color: 'white' }} />
+              <div className="absolute left-3 top-1/3 transform -translate-y-1/2 flex items-center justify-center w-5 h-5">
+                <Lock className="w-4 h-4" style={{ color: 'white' }} />
+              </div>
               <input
                 type="password"
                 value={password} 
