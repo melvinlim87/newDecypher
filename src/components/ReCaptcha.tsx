@@ -1,4 +1,4 @@
-import React, { useEffect, useCallback, useState } from 'react';
+import React, { useEffect, useCallback, useState, useRef } from 'react';
 import axios from 'axios';
 import { API_BASE_URL } from '../config';
 
@@ -10,9 +10,12 @@ interface ReCaptchaProps {
 declare global {
   interface Window {
     onRecaptchaVerify: (token: string) => void;
+    onRecaptchaLoaded: () => void;
     grecaptcha?: {
       render: (element: HTMLElement | string, options: any) => number;
       reset: (widgetId?: number) => void;
+      execute: (sitekey: string, options?: any) => Promise<string>;
+      ready: (callback: () => void) => void;
     };
   }
 }
@@ -21,6 +24,8 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = ({ onVerify, onError }) => {
   const [siteKey, setSiteKey] = useState<string>('');
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<boolean>(false);
+  const [widgetId, setWidgetId] = useState<number | null>(null);
+  const recaptchaRef = useRef<HTMLDivElement>(null);
   
   // Fetch the reCAPTCHA site key from the backend
   useEffect(() => {
@@ -74,23 +79,56 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = ({ onVerify, onError }) => {
       return;
     }
 
-    // Register the callback globally
+    // Register callbacks globally
     window.onRecaptchaVerify = handleVerify;
+    window.onRecaptchaLoaded = () => {
+      console.log('reCAPTCHA script loaded');
+      try {
+        if (recaptchaRef.current && window.grecaptcha) {
+          window.grecaptcha.ready(() => {
+            console.log('reCAPTCHA is ready, rendering widget...');
+            try {
+              const id = window.grecaptcha!.render(recaptchaRef.current!, {
+                'sitekey': siteKey,
+                'theme': 'dark',
+                'callback': 'onRecaptchaVerify'
+              });
+              setWidgetId(id);
+              console.log('reCAPTCHA widget rendered with ID:', id);
+            } catch (err) {
+              console.error('Error rendering reCAPTCHA widget:', err);
+              onError?.('Error rendering reCAPTCHA widget');
+            }
+          });
+        }
+      } catch (err) {
+        console.error('Error in onRecaptchaLoaded:', err);
+        onError?.('Error initializing reCAPTCHA');
+      }
+    };
 
     // Load the reCAPTCHA script
     const script = document.createElement('script');
-    script.src = 'https://www.google.com/recaptcha/api.js';
+    script.src = 'https://www.google.com/recaptcha/api.js?onload=onRecaptchaLoaded&render=explicit';
     script.async = true;
     script.defer = true;
     document.head.appendChild(script);
 
     return () => {
       // Cleanup
-      delete window.onRecaptchaVerify;
+      if (widgetId !== null && window.grecaptcha) {
+        try {
+          window.grecaptcha.reset(widgetId);
+        } catch (e) {
+          console.error('Error resetting reCAPTCHA:', e);
+        }
+      }
+      if (window.onRecaptchaVerify) window.onRecaptchaVerify = () => {};
+      if (window.onRecaptchaLoaded) window.onRecaptchaLoaded = () => {};
       document.querySelectorAll('script[src*="recaptcha/api.js"]')
         .forEach(s => s.remove());
     };
-  }, [handleVerify, onError]);
+  }, [siteKey, loading, handleVerify, onError]);
 
   if (loading) {
     return (
@@ -111,12 +149,7 @@ export const ReCaptcha: React.FC<ReCaptchaProps> = ({ onVerify, onError }) => {
 
   return (
     <div className="flex justify-center items-center w-full scale-90 origin-center">
-      <div
-        className="g-recaptcha"
-        data-sitekey={siteKey}
-        data-theme="dark"
-        data-callback="onRecaptchaVerify"
-      />
+      <div ref={recaptchaRef} className="g-recaptcha" />
     </div>
   );
 };
