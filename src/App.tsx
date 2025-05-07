@@ -1,9 +1,7 @@
-import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { Login } from './pages/Login';
 import { Register } from './pages/Register';
 import { EAGenerator } from './pages/EAGenerator';
-import { History } from './pages/History';
 import { AnalysisHistory } from './pages/AnalysisHistory';
 import { EAHistory } from './pages/EAHistory';
 import { Profile } from './pages/Profile';
@@ -24,16 +22,18 @@ function App() {
     <ThemeProvider>
       <SidebarProvider>
         <AnalysisProvider>
-          <Layout>
           <Routes>
+            {/* Public routes without Layout */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            <Route path="/" element={<HomePage />} />
+            
+            {/* Public home page with Layout */}
+            <Route path="/" element={<Layout><HomePage /></Layout>} />
             <Route
               path="/profile"
               element={
                 <ProtectedRoute>
-                  <Profile />
+                  <Layout><Profile /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -41,7 +41,7 @@ function App() {
               path="/purchase-history"
               element={
                 <ProtectedRoute>
-                  <PurchaseHistory />
+                  <Layout><PurchaseHistory /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -49,7 +49,7 @@ function App() {
               path="/admin"
               element={
                 <ProtectedRoute>
-                  <AdminTools />
+                  <Layout><AdminTools /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -57,7 +57,7 @@ function App() {
               path="/dashboard"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/ai-chat" replace />
+                  <Layout><Navigate to="/ai-chat" replace /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -65,7 +65,7 @@ function App() {
               path="/ea-generator"
               element={
                 <ProtectedRoute>
-                  <EAGenerator />
+                  <Layout><EAGenerator /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -73,7 +73,7 @@ function App() {
               path="/ai-chat"
               element={
                 <ProtectedRoute>
-                  <AIAnalysisChat />
+                  <Layout><AIAnalysisChat /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -81,7 +81,7 @@ function App() {
               path="/history"
               element={
                 <ProtectedRoute>
-                  <Navigate to="/analysis-history" replace />
+                  <Layout><Navigate to="/analysis-history" replace /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -89,7 +89,7 @@ function App() {
               path="/analysis-history"
               element={
                 <ProtectedRoute>
-                  <AnalysisHistory />
+                  <Layout><AnalysisHistory /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -97,7 +97,7 @@ function App() {
               path="/ea-history"
               element={
                 <ProtectedRoute>
-                  <EAHistory />
+                  <Layout><EAHistory /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -105,7 +105,7 @@ function App() {
               path="/chart-img"
               element={
                 <ProtectedRoute>
-                  <ChartImg />
+                  <Layout><ChartImg /></Layout>
                 </ProtectedRoute>
               }
             />
@@ -113,13 +113,12 @@ function App() {
               path="/market/:category/:symbol"
               element={
                 <ProtectedRoute>
-                  <MarketPage />
+                  <Layout><MarketPage /></Layout>
                 </ProtectedRoute>
               }
             />
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-          </Layout>
         </AnalysisProvider>
       </SidebarProvider>
     </ThemeProvider>

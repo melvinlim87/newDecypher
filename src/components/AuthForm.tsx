@@ -50,6 +50,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [telegramLoading, setTelegramLoading] = useState(false);
+  const [registrationComplete, setRegistrationComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [recaptchaToken, setRecaptchaToken] = useState<string | null>(null);
@@ -288,7 +289,12 @@ export function AuthForm({ type }: AuthFormProps) {
             console.error('Failed to process referral:', referralError);
           }
         }
-        navigate('/');
+        // Set registration complete flag to show loading overlay
+        setRegistrationComplete(true);
+        // Add a small delay to ensure the loading overlay is shown
+        setTimeout(() => {
+          navigate('/');
+        }, 500);
       } else {
         // 1. Sign in with Firebase
         const userCredential = await signInWithEmailAndPassword(auth, email, password);
@@ -660,7 +666,14 @@ export function AuthForm({ type }: AuthFormProps) {
   };
 
   return (
-    <div className="w-full mx-auto">
+    <div className="w-full mx-auto relative">
+      {/* Registration complete overlay */}
+      {registrationComplete && (
+        <div className="fixed inset-0 bg-black/80 z-50 flex flex-col items-center justify-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-white mb-4"></div>
+          <p className="text-white text-lg">Registration successful! Redirecting...</p>
+        </div>
+      )}
       <h2 className="text-2xl font-semibold text-center mb-6" 
         style={{ color: 'white', textShadow: '0 0 5px rgba(0, 169, 224, 0.5)', fontSize: '1.75rem' }}>
         {type === 'login' ? 'Sign In' : 'Create Account'}
