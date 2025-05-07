@@ -1,5 +1,6 @@
 import { loadStripe } from '@stripe/stripe-js/pure';
 import { Stripe } from '@stripe/stripe-js';
+import { API_BASE_URL } from '../config';
 
 let stripePromise: Promise<Stripe | null>;
 
@@ -77,8 +78,8 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
       throw new Error('Stripe failed to initialize. Please check your publishable key.');
     }
 
-    // Create checkout session
-    const response = await fetch('/.netlify/functions/create-checkout', {
+    // Create checkout session using Laravel backend
+    const response = await fetch(`${API_BASE_URL}/stripe/create-checkout`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -100,7 +101,7 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
 
     // Parse session data
     const session = await response.json();
-    if (!session.id) {
+    if (!session.success || !session.id) {
       throw new Error('Invalid session data received from server');
     }
 
@@ -130,7 +131,7 @@ export async function verifyCheckoutSession(sessionId: string) {
     }
     
     console.log('Verifying checkout session:', sessionId);
-    const response = await fetch(`/.netlify/functions/verify-session?session_id=${encodeURIComponent(sessionId)}`);
+    const response = await fetch(`${API_BASE_URL}/stripe/verify-session?session_id=${encodeURIComponent(sessionId)}`);
     
     // Handle non-OK responses with more detailed error messages
     if (!response.ok) {
