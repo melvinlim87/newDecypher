@@ -28,19 +28,19 @@ const TOKENS_PER_DOLLAR = 667; // ~667 tokens per $1
 // Calculate package prices with minimum of $10
 export const STRIPE_PRICES = {
   BASIC: {
-    id: import.meta.env.VITE_STRIPE_PRICE_7000_TOKENS,
+    id: 'price_1R4cZ22NO6PNHfEnEhmEzX2y',  // Hardcoded price ID for 7,000 tokens
     tokens: 7000, // 10 dollars worth of tokens (rounded up from 6667)
     price: 10.00, // Minimum $10 package
     description: `Good for approximately 7,000 tokens of analysis or chat`
   },
   STANDARD: {
-    id: import.meta.env.VITE_STRIPE_PRICE_40000_TOKENS,
+    id: 'price_1R4cZj2NO6PNHfEn4XiPU4tI',  // Hardcoded price ID for 40,000 tokens
     tokens: 40000, // 50 dollars worth of tokens (33,350) + 6,650 bonus tokens (20% bonus)
     price: 50.00, 
     description: `Good for approximately 40,000 tokens of analysis or chat (includes bonus tokens!)`
   },
   PREMIUM: {
-    id: import.meta.env.VITE_STRIPE_PRICE_100000_TOKENS,
+    id: 'price_1R4caA2NO6PNHfEncTFmFBd4',  // Hardcoded price ID for 100,000 tokens
     tokens: 100000, // 100 dollars worth of tokens (66,700) + 33,300 bonus tokens (50% bonus)
     price: 100.00,
     description: `Good for approximately 100,000 tokens of analysis or chat (includes bonus tokens!)`
