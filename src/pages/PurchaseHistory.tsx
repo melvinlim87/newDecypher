@@ -153,8 +153,18 @@ export function PurchaseHistory() {
       // Combine both lists
       const combinedList = [...purchasesList, ...transformedHistoryList];
       
+      // Filter out unwanted 7000 tokens entries that appear to be placeholders
+      const filteredList = combinedList.filter(item => {
+        // Keep all non-7000 token entries
+        if (item.tokens !== 7000) return true;
+        
+        // If it's a 7000 token entry, check if it's a legitimate purchase
+        // Keep it only if it has a valid amount and is a purchase type
+        return item.amount > 0 && item.type === 'purchase';
+      });
+      
       // Sort by date, newest first
-      setPurchases(combinedList.sort((a, b) => 
+      setPurchases(filteredList.sort((a, b) => 
         new Date(b.date).getTime() - new Date(a.date).getTime()
       ));
     } catch (error) {
@@ -296,7 +306,7 @@ export function PurchaseHistory() {
                           </p>
                           <p className="text-sm app-text opacity-80">
                             {purchase.type && purchase.type.includes('referral') 
-                              ? (purchase.description || 'Referral Bonus') 
+                              ? purchase.description 
                               : `$${(purchase?.amount || 0).toFixed(2)} USD`}
                           </p>
                         </div>
@@ -308,7 +318,7 @@ export function PurchaseHistory() {
                           </p>
                           <p className="text-sm app-text" style={{opacity: 0.7}}>
                             {purchase.type && purchase.type.includes('referral') 
-                              ? 'Referral Bonus' 
+                              ? '' 
                               : purchase.status.charAt(0).toUpperCase() + purchase.status.slice(1)}
                           </p>
                         </div>
