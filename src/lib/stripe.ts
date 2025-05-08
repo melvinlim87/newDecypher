@@ -1,15 +1,4 @@
-import { loadStripe } from '@stripe/stripe-js/pure';
-import { Stripe } from '@stripe/stripe-js';
 import { API_BASE_URL } from '../config';
-
-let stripePromise: Promise<Stripe | null>;
-
-const getStripe = () => {
-  if (!stripePromise) {
-    stripePromise = loadStripe(import.meta.env.VITE_STRIPE_PUBLISHABLE_KEY);
-  }
-  return stripePromise;
-};
 
 // Define average base costs (per 1000 tokens) across all models
 const AVG_INPUT_COST = 0.005; // $0.005 per 1K input tokens (average across models)
@@ -105,20 +94,8 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
       window.location.href = session.sessionUrl;
       return;
     } else if (session.id) {
-      // Fallback to client-side redirect if only ID is provided
-      const stripe = await getStripe();
-      if (!stripe) {
-        throw new Error('Stripe failed to initialize. Please check your publishable key.');
-      }
-      
-      const { error } = await stripe.redirectToCheckout({
-        sessionId: session.id,
-      });
-
-      if (error) {
-        console.error('Stripe redirect error:', error);
-        throw new Error(error.message || 'Failed to redirect to checkout');
-      }
+      // If we only have a session ID, redirect to Stripe's hosted checkout page
+      window.location.href = `https://checkout.stripe.com/pay/${session.id}`;
     } else {
       throw new Error('No session URL or ID provided');
     }

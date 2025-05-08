@@ -26,7 +26,7 @@ function App() {
             {/* Public routes without Layout */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-            
+
             {/* Public home page with Layout */}
             <Route path="/" element={<Layout><HomePage /></Layout>} />
             <Route
