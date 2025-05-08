@@ -72,12 +72,6 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
       throw new Error('User ID is required');
     }
 
-    // Validate Stripe is initialized
-    const stripe = await getStripe();
-    if (!stripe) {
-      throw new Error('Stripe failed to initialize. Please check your publishable key.');
-    }
-
     // Create checkout session using Laravel backend
     const response = await fetch(`${API_BASE_URL}/stripe/create-checkout`, {
       method: 'POST',
@@ -101,18 +95,32 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
 
     // Parse session data
     const session = await response.json();
-    if (!session.success || !session.id) {
+    if (!session.success) {
       throw new Error('Invalid session data received from server');
     }
 
-    // Redirect to checkout
-    const { error } = await stripe.redirectToCheckout({
-      sessionId: session.id,
-    });
+    // Check if we have a session URL to redirect to
+    if (session.sessionUrl) {
+      // Use the session URL directly from the backend
+      window.location.href = session.sessionUrl;
+      return;
+    } else if (session.id) {
+      // Fallback to client-side redirect if only ID is provided
+      const stripe = await getStripe();
+      if (!stripe) {
+        throw new Error('Stripe failed to initialize. Please check your publishable key.');
+      }
+      
+      const { error } = await stripe.redirectToCheckout({
+        sessionId: session.id,
+      });
 
-    if (error) {
-      console.error('Stripe redirect error:', error);
-      throw new Error(error.message || 'Failed to redirect to checkout');
+      if (error) {
+        console.error('Stripe redirect error:', error);
+        throw new Error(error.message || 'Failed to redirect to checkout');
+      }
+    } else {
+      throw new Error('No session URL or ID provided');
     }
   } catch (error) {
     console.error('Stripe checkout error:', error);

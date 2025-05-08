@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { X, CreditCard, Loader2, AlertCircle } from 'lucide-react';
 import { STRIPE_PRICES, createCheckoutSession } from '../lib/stripe';
-import { auth, database } from '../lib/firebase';
+import { auth } from '../lib/firebase';
 import { useTheme } from '../contexts/ThemeContext';
 
 interface TokenPurchaseModalProps {
@@ -55,7 +55,15 @@ export function TokenPurchaseModal({ isOpen, onClose }: TokenPurchaseModalProps)
 
   if (!isOpen) return null;
 
-  const checkTelegramLogin = () => {
+  // Define a type for Telegram user to fix TypeScript errors
+  type TelegramUser = {
+    uid: string;
+    displayName: string;
+    email: string;
+    isTelegramUser: boolean;
+  };
+
+  const checkTelegramLogin = (): TelegramUser | null => {
     const telegramUser = sessionStorage.getItem('telegramUser');
     if (telegramUser) {
       try {
@@ -89,8 +97,9 @@ export function TokenPurchaseModal({ isOpen, onClose }: TokenPurchaseModalProps)
       // For Telegram users, we need to handle the data differently
       let customerName = '';
       let customerEmail = '';
+      const isTelegramUser = 'isTelegramUser' in currentUser;
       
-      if (currentUser.isTelegramUser) {
+      if (isTelegramUser) {
         // For Telegram users, use displayName from our custom object
         customerName = currentUser.displayName || '';
         // We don't have email for Telegram users typically
@@ -108,7 +117,9 @@ export function TokenPurchaseModal({ isOpen, onClose }: TokenPurchaseModalProps)
       
       console.log('Sending customer info to checkout:', customerInfo);
 
+      // Use the updated createCheckoutSession function that handles the Laravel backend
       await createCheckoutSession(priceId, currentUser.uid, customerInfo);
+      
     } catch (error) {
       setError(error instanceof Error ? error.message : 'Failed to initiate purchase');
     } finally {
