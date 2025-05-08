@@ -88,16 +88,13 @@ export async function createCheckoutSession(priceId: string, userId: string, cus
       throw new Error('Invalid session data received from server');
     }
 
-    // Check if we have a session URL to redirect to
+    // The backend should always provide a session URL
     if (session.sessionUrl) {
       // Use the session URL directly from the backend
       window.location.href = session.sessionUrl;
       return;
-    } else if (session.id) {
-      // If we only have a session ID, redirect to Stripe's hosted checkout page
-      window.location.href = `https://checkout.stripe.com/pay/${session.id}`;
     } else {
-      throw new Error('No session URL or ID provided');
+      throw new Error('No checkout URL provided by the backend');
     }
   } catch (error) {
     console.error('Stripe checkout error:', error);
