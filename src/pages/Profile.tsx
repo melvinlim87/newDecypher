@@ -335,7 +335,7 @@ export function Profile() {
         try {
           const result = await verifyCheckoutSession(sessionId);
           if (result.success) {
-            setSuccessMessage(`Successfully purchased ${result.tokens} tokens!`);
+            setSuccessMessage(`Successfully purchased ${result.tokensAdded} tokens!`);
           } else {
             setError('Failed to verify payment. Please contact support.');
           }
