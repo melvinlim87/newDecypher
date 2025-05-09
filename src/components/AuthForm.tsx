@@ -119,12 +119,32 @@ export function AuthForm({ type }: AuthFormProps) {
   useEffect(() => {
     const fetchTelegramBotId = async () => {
       try {
-        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/config/telegram`);
-        if (response.data && response.data.bot_id) {
-          setTelegramBotId(response.data.bot_id.toString());
+        // Hard-coded fallback bot username (replace with your actual Telegram bot username)
+        const fallbackBotId = 'DecyphersAIBot';
+        
+        console.log('Fetching Telegram bot ID from API...');
+        // Make sure we're using the correct API URL
+        const apiUrl = import.meta.env.VITE_API_URL || 'https://ai.decyphers.com/api';
+        console.log('Using API URL:', apiUrl);
+        const response = await axios.get(`${apiUrl}/config/telegram`);
+        console.log('API response:', response.data);
+        
+        // Type assertion for response.data
+        const responseData = response.data as { bot_id?: string };
+        
+        if (responseData && responseData.bot_id) {
+          console.log('Setting Telegram bot ID from API:', responseData.bot_id);
+          setTelegramBotId(responseData.bot_id.toString());
+        } else {
+          console.log('Using fallback Telegram bot ID:', fallbackBotId);
+          setTelegramBotId(fallbackBotId);
         }
       } catch (error) {
         console.error('Error fetching Telegram bot ID:', error);
+        // Use fallback bot ID in case of error
+        const fallbackBotId = 'DecyphersAIBot';
+        console.log('Using fallback Telegram bot ID after error:', fallbackBotId);
+        setTelegramBotId(fallbackBotId);
       }
     };
     
@@ -1013,8 +1033,9 @@ export function AuthForm({ type }: AuthFormProps) {
                   const left = (window.innerWidth - width) / 2;
                   const top = (window.innerHeight - height) / 2;
                   
+                  // Use the direct link to the Telegram bot
                   window.open(
-                    `https://oauth.telegram.org/auth?bot_id=${telegramBotId}&origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}`,
+                    `https://t.me/${telegramBotId}`,
                     'Telegram Login',
                     `width=${width},height=${height},left=${left},top=${top}`
                   );
