@@ -31,7 +31,18 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
   const [widgetId, setWidgetId] = useState<number | null>(null);
   const [scriptLoaded, setScriptLoaded] = useState<boolean>(false);
   const [rendered, setRendered] = useState<boolean>(false);
+  const [recaptchaSize, setRecaptchaSize] = useState<'normal' | 'compact'>('normal');
   const recaptchaRef = useRef<HTMLDivElement>(null);
+
+  // Responsive size handler
+  useEffect(() => {
+    const handleResize = () => {
+      setRecaptchaSize(window.innerWidth < 400 ? 'compact' : 'normal');
+    };
+    window.addEventListener('resize', handleResize);
+    handleResize(); // initial
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   
   // Expose the reset method to parent components
   useImperativeHandle(ref, () => ({
@@ -157,6 +168,7 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
             const id = window.grecaptcha.render(recaptchaRef.current, {
               'sitekey': siteKey,
               'theme': 'dark',
+              'size': recaptchaSize,
               'callback': (token: string) => {
                 console.log('Direct callback received token:', token);
                 handleVerify(token);
@@ -211,11 +223,16 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
   }
 
   return (
-    <div className="recaptcha-container" style={{ marginBottom: '20px' }}>
+    <div className="recaptcha-container recaptcha-responsive" style={{ marginBottom: '20px' }}>
       <div 
         ref={recaptchaRef} 
         className={`g-recaptcha ${(loading || error) ? 'hidden' : ''}`}
       />
     </div>
+  
   );
 }), () => true); // Always use the same instance
+
+// Responsive CSS for reCAPTCHA
+// Add this to your global styles or import in your main CSS file
+// .recaptcha-responsive { max-width: 100%; overflow-x: auto; display: flex; justify-content: center; }
