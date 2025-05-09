@@ -38,7 +38,6 @@ interface AuthFormProps {
   type: 'login' | 'register';
 }
 
-const RECAPTCHA_SITE_KEY = import.meta.env.VITE_RECAPTCHA_SITE_KEY || '';
 const telegramBotName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'LazeAIMarketAnalyzerBot';
 
 export function AuthForm({ type }: AuthFormProps) {
@@ -59,6 +58,10 @@ export function AuthForm({ type }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   
+  // State for Telegram bot ID from backend
+  const [telegramBotId, setTelegramBotId] = useState<string>('');
+  const [telegramConfigLoaded, setTelegramConfigLoaded] = useState(false);
+  
   // Validation states
   const [emailValid, setEmailValid] = useState<boolean | null>(null);
   const [passwordValid, setPasswordValid] = useState<boolean | null>(null);
@@ -70,6 +73,31 @@ export function AuthForm({ type }: AuthFormProps) {
   // Regex patterns for validation
   const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+
+  // Fetch Telegram bot ID from backend
+  useEffect(() => {
+    const fetchTelegramConfig = async () => {
+      try {
+        const response = await fetch(`${API_BASE_URL}/config/telegram`);
+        const data = await response.json();
+        if (data.bot_id) {
+          setTelegramBotId(data.bot_id);
+        } else {
+          console.error('No Telegram bot ID found in backend response');
+          // Fallback to a default ID only if backend request fails
+          setTelegramBotId('6853268089');
+        }
+      } catch (error) {
+        console.error('Error fetching Telegram config:', error);
+        // Fallback to a default ID only if backend request fails
+        setTelegramBotId('6853268089');
+      } finally {
+        setTelegramConfigLoaded(true);
+      }
+    };
+    
+    fetchTelegramConfig();
+  }, []);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -920,6 +948,11 @@ export function AuthForm({ type }: AuthFormProps) {
               <button
                 type="button"
                 onClick={() => {
+                  if (!telegramConfigLoaded || !telegramBotId) {
+                    console.error('Telegram bot ID not loaded yet');
+                    return;
+                  }
+                  
                   setTelegramLoading(true);
                   // Open Telegram login in a popup window
                   const width = 550;
@@ -928,7 +961,7 @@ export function AuthForm({ type }: AuthFormProps) {
                   const top = window.innerHeight / 2 - height / 2;
                   
                   const popup = window.open(
-                    `https://oauth.telegram.org/auth?bot_id=${telegramBotName}&origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}`,
+                    `https://oauth.telegram.org/auth?bot_id=${telegramBotId}&origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}`,
                     'TelegramAuth',
                     `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0,toolbar=0`
                   );
