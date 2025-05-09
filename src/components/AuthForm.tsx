@@ -660,34 +660,80 @@ export function AuthForm({ type }: AuthFormProps) {
       }
       
       // Extract user data from Telegram response
-      const { id, first_name, last_name, username, photo_url, auth_date } = data;
+      const { id, first_name, last_name, username, photo_url, auth_date, hash } = data;
       
       // Create a display name from the available fields
       const displayName = username || first_name || `Telegram User ${id.substring(0, 6)}`;
       
-      console.log('Processing Telegram login with Firebase', {
+      // Prepare data for backend validation and authentication
+      const telegramData = {
         id,
-        first_name,
-        last_name,
-        username,
-        photo_url,
-        auth_date
-      });
-      
-      // For Telegram login, we'll use a simpler approach
-      // Instead of trying to sign in first, we'll directly create a new account
-      // If the account already exists, we'll handle that error specifically
-      
-      // Generate a unique email for the Telegram user
-      const email = `telegram_${id}@telegram.auth`;
-      // Use a fixed password for all Telegram users
-      const password = `TelegramLogin123!`;
+        first_name: first_name || '',
+        last_name: last_name || '',
+        username: username || '',
+        photo_url: photo_url || '',
+        auth_date,
+        hash
+      };
       
       try {
-        console.log('Creating or signing in Telegram user account');
+        // Send data to backend for validation and authentication
+        const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(telegramData)
+        });
         
-        // Try to create a new account
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Backend validation failed:', errorData.message || 'Unknown error');
+          setError('Failed to validate Telegram authentication. Please try again.');
+          return;
+        }
+        
+        const authData = await response.json();
+        
+        // If we get a token from the backend, use it
+        if (authData.token) {
+          // Store the token
+          localStorage.setItem('auth_token', authData.token);
+          
+          // Redirect to dashboard or home page
+          navigate('/');
+          return;
+        }
+      } catch (backendError) {
+        console.error('Error communicating with backend:', backendError);
+        // Fall back to Firebase authentication if backend fails
+      }
+      
+      // If we don't get a token from the backend, try to create a Firebase user
+      // Generate a unique email for the Telegram user
+      const email = `telegram_${id}@telegram.auth`;
+      // Generate a secure random password
+      const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+      
+      try {
+        // Try to sign in first (in case user already exists)
         try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          // User exists and is signed in
+          const user = userCredential.user;
+          
+          // Update profile if needed
+          if (user.displayName !== displayName || !user.photoURL) {
+            await updateProfile(user, {
+              displayName,
+              photoURL: photo_url || null
+            });
+          }
+          
+          // Redirect to dashboard
+          navigate('/');
+        } catch (signInError) {
+          // User doesn't exist, create a new account
           const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const user = userCredential.user;
           
@@ -706,39 +752,23 @@ export function AuthForm({ type }: AuthFormProps) {
             telegramId: id,
             telegramUsername: username || null,
             createdAt: new Date().toISOString(),
-            referralCode: generateUniqueReferralCode(displayName, id.toString()),
+            referralCode: generateUniqueReferralCode(),
             referredBy: referralCode || null
           });
           
-          console.log('New Telegram user created successfully');
-          navigate('/');
-        } catch (createError: any) {
-          // If the error is 'email-already-in-use', try to sign in instead
-          if (createError.code === 'auth/email-already-in-use') {
-            console.log('User already exists, signing in');
-            
-            // User already exists, sign in
-            const userCredential = await signInWithEmailAndPassword(auth, email, password);
-            const user = userCredential.user;
-            
-            // Update profile if needed
-            if (user.displayName !== displayName || (photo_url && !user.photoURL)) {
-              await updateProfile(user, {
-                displayName,
-                photoURL: photo_url || null
-              });
-            }
-            
-            console.log('Telegram user signed in successfully');
-            navigate('/');
-          } else {
-            // Some other error
-            throw createError;
+          // If there's a referral code, update the referrer's stats
+          if (referralCode) {
+            // Find the user with this referral code
+            // This would typically be done on the backend
+            console.log('User referred by:', referralCode);
           }
+          
+          // Redirect to dashboard
+          navigate('/');
         }
       } catch (error) {
         console.error('Firebase auth error:', error);
-        setError('Failed to authenticate with Telegram. Please try again.');
+        setError('Failed to create user account. Please try again.');
       }
     } catch (error) {
       console.error('Telegram login processing error:', error);
