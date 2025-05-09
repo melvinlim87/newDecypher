@@ -403,11 +403,27 @@ export function Profile() {
     }
   };
 
+  // Responsive window width tracking for layout
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   return (
     <div className={`profile-page profile-page-container ${theme === 'dark' ? 'dark' : ''} flex items-center justify-center p-4 sm:p-8 lg:p-12`}
       style={{
-        paddingLeft: isCollapsed ? 'calc(4rem + 2rem)' : 'calc(16rem + 2rem)',
-        paddingRight: '2rem'
+        paddingLeft:
+          windowWidth <= 768
+            ? '1rem'
+            : isCollapsed
+            ? 'calc(4rem + 2rem)'
+            : 'calc(16rem + 2rem)',
+        paddingRight: '2rem',
+        marginTop: '2rem'
       }}>
       <div className="max-w-7xl w-full space-y-8 profile-card" style={{
         backdropFilter: 'blur(10px)',
