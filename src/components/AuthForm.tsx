@@ -674,80 +674,66 @@ export function AuthForm({ type }: AuthFormProps) {
         auth_date
       });
       
+      // For Telegram login, we'll use a simpler approach
+      // Instead of trying to sign in first, we'll directly create a new account
+      // If the account already exists, we'll handle that error specifically
+      
       // Generate a unique email for the Telegram user
       const email = `telegram_${id}@telegram.auth`;
-      // Use a consistent password based on the user's Telegram ID
-      // This ensures we can sign in the same user across sessions
-      const password = `Telegram${id}!${auth_date}`;
+      // Use a fixed password for all Telegram users
+      const password = `TelegramLogin123!`;
       
       try {
-        // First, try to sign in with the email (assuming user exists)
+        console.log('Creating or signing in Telegram user account');
+        
+        // Try to create a new account
         try {
-          console.log('Attempting to sign in existing Telegram user');
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          console.log('Telegram user signed in successfully');
-          
-          // User exists and is signed in
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
           const user = userCredential.user;
           
-          // Update profile if needed
-          if (user.displayName !== displayName || (photo_url && !user.photoURL)) {
-            console.log('Updating user profile');
-            await updateProfile(user, {
-              displayName,
-              photoURL: photo_url || null
-            });
-          }
+          // Set display name and photo URL
+          await updateProfile(user, {
+            displayName,
+            photoURL: photo_url || null
+          });
           
-          // Redirect to dashboard
+          // Create user record in database
+          const userRef = ref(database, `users/${user.uid}`);
+          await set(userRef, {
+            email,
+            displayName,
+            photoURL: photo_url || null,
+            telegramId: id,
+            telegramUsername: username || null,
+            createdAt: new Date().toISOString(),
+            referralCode: generateUniqueReferralCode(displayName, id.toString()),
+            referredBy: referralCode || null
+          });
+          
+          console.log('New Telegram user created successfully');
           navigate('/');
-        } catch (signInError: any) {
-          // If error is not 'user-not-found', log it and try to create user
-          console.log('Sign in error:', signInError.code);
-          
-          if (signInError.code === 'auth/user-not-found') {
-            // User doesn't exist, create a new account
-            console.log('Creating new Telegram user account');
-            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        } catch (createError: any) {
+          // If the error is 'email-already-in-use', try to sign in instead
+          if (createError.code === 'auth/email-already-in-use') {
+            console.log('User already exists, signing in');
+            
+            // User already exists, sign in
+            const userCredential = await signInWithEmailAndPassword(auth, email, password);
             const user = userCredential.user;
             
-            // Set display name and photo URL
-            await updateProfile(user, {
-              displayName,
-              photoURL: photo_url || null
-            });
-            
-            // Create user record in database
-            const userRef = ref(database, `users/${user.uid}`);
-            await set(userRef, {
-              email,
-              displayName,
-              photoURL: photo_url || null,
-              telegramId: id,
-              telegramUsername: username || null,
-              createdAt: new Date().toISOString(),
-              referralCode: generateUniqueReferralCode(displayName, id.toString()),
-              referredBy: referralCode || null
-            });
-            
-            // If there's a referral code, update the referrer's stats
-            if (referralCode) {
-              console.log('User referred by:', referralCode);
+            // Update profile if needed
+            if (user.displayName !== displayName || (photo_url && !user.photoURL)) {
+              await updateProfile(user, {
+                displayName,
+                photoURL: photo_url || null
+              });
             }
             
-            // Redirect to dashboard
+            console.log('Telegram user signed in successfully');
             navigate('/');
-          } else if (signInError.code === 'auth/wrong-password') {
-            // User exists but password has changed (maybe auth_date changed)
-            // Try to sign in with email/password auth
-            console.log('Password mismatch, attempting to update user');
-            
-            // This is a special case - we need to handle it differently
-            // For now, just notify the user
-            setError('Authentication failed. Please try again or contact support.');
           } else {
             // Some other error
-            throw signInError;
+            throw createError;
           }
         }
       } catch (error) {
