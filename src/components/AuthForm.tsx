@@ -18,12 +18,16 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { ReCaptcha, ReCaptchaRef } from './ReCaptcha';
 import { generateUniqueReferralCode } from '../utils/referralUtils';
 import { useTheme } from '../contexts/ThemeContext';
-import TelegramLoginButton from 'react-telegram-login';
 
 declare global {
   interface Window {
     recaptchaLoaded?: boolean;
     onRecaptchaLoadCallback?: () => void;
+    Telegram?: {
+      Login?: {
+        auth: (options: { bot_id: string, request_access?: boolean }, callback: (data: any) => void) => void;
+      }
+    };
   }
   var grecaptcha: {
     ready: (callback: () => void) => void;
@@ -38,7 +42,58 @@ interface AuthFormProps {
   type: 'login' | 'register';
 }
 
-const telegramBotName = import.meta.env.VITE_TELEGRAM_BOT_NAME || 'LazeAIMarketAnalyzerBot';
+// Function to handle Telegram auth response
+const handleTelegramLoginData = async (user: any) => {
+  if (!user || !user.id) {
+    console.error('Invalid data from Telegram');
+    return;
+  }
+
+  try {
+    // Send the Telegram data to the backend for validation
+    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/telegram`, user);
+    
+    if (response.data && response.data.token) {
+      // Store the token and user data
+      localStorage.setItem('token', response.data.token.toString());
+      localStorage.setItem('user', JSON.stringify(response.data.user || {}));
+      
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    } else {
+      // If no token is returned, try to create a Firebase account
+      const credential = await createUserWithEmailAndPassword(
+        auth,
+        `telegram${user.id}@telegram.com`,
+        `Telegram${user.id}!`
+      );
+      
+      // Update the user profile with Telegram data
+      await updateProfile(credential.user, {
+        displayName: `${user.first_name} ${user.last_name || ''}`.trim(),
+        photoURL: user.photo_url || ''
+      });
+      
+      // Redirect to dashboard
+      window.location.href = '/dashboard';
+    }
+  } catch (error) {
+    console.error('Error processing Telegram login:', error);
+  }
+};
+
+// Add the onTelegramAuth function to the window object so it can be called by the Telegram widget
+declare global {
+  interface Window {
+    onTelegramAuth: (user: any) => void;
+  }
+}
+
+// Make the function available globally
+window.onTelegramAuth = (user: any) => {
+  console.log('Telegram auth successful:', user);
+  handleTelegramLoginData(user);
+};
 
 export function AuthForm({ type }: AuthFormProps) {
   const navigate = useNavigate();
@@ -48,7 +103,6 @@ export function AuthForm({ type }: AuthFormProps) {
   const [name, setName] = useState('');
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [telegramLoading, setTelegramLoading] = useState(false);
   const [registrationComplete, setRegistrationComplete] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -58,9 +112,47 @@ export function AuthForm({ type }: AuthFormProps) {
   const [searchParams] = useSearchParams();
   const referralCode = searchParams.get('ref');
   
-  // State for Telegram bot ID from backend
+  // State for Telegram login
   const [telegramBotId, setTelegramBotId] = useState<string>('');
-  const [telegramConfigLoaded, setTelegramConfigLoaded] = useState(false);
+  
+  // Fetch Telegram bot ID from backend
+  useEffect(() => {
+    const fetchTelegramBotId = async () => {
+      try {
+        const response = await axios.get(`${import.meta.env.VITE_API_URL}/api/config/telegram`);
+        if (response.data && response.data.bot_id) {
+          setTelegramBotId(response.data.bot_id.toString());
+        }
+      } catch (error) {
+        console.error('Error fetching Telegram bot ID:', error);
+      }
+    };
+    
+    fetchTelegramBotId();
+  }, []);
+  
+  // Create and inject the Telegram login button when telegramBotId is available
+  useEffect(() => {
+    if (!telegramBotId) return;
+    
+    // Clear any existing button
+    const container = document.getElementById('telegram-login-container');
+    if (container) {
+      container.innerHTML = '';
+      
+      // Create script element for Telegram widget
+      const script = document.createElement('script');
+      script.async = true;
+      script.src = 'https://telegram.org/js/telegram-widget.js?22';
+      script.setAttribute('data-telegram-login', telegramBotId);
+      script.setAttribute('data-size', 'large');
+      script.setAttribute('data-onauth', 'onTelegramAuth(user)');
+      script.setAttribute('data-request-access', 'write');
+      
+      // Append to container
+      container.appendChild(script);
+    }
+  }, [telegramBotId]);
   
   // Validation states
   const [emailValid, setEmailValid] = useState<boolean | null>(null);
@@ -74,31 +166,7 @@ export function AuthForm({ type }: AuthFormProps) {
   const EMAIL_REGEX = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
   const PASSWORD_REGEX = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
 
-  // Fetch Telegram bot ID from backend
-  useEffect(() => {
-    const fetchTelegramConfig = async () => {
-      try {
-        
-        const response = await fetch(`${API_BASE_URL}/config/telegram`);
-        const data = await response.json();
-        
-        
-        if (data.bot_id) {
-          setTelegramBotId(data.bot_id);
-        } else {
-          // Fallback to a default ID only if backend request fails
-          setTelegramBotId('6853268089');
-        }
-      } catch (error) {
-        // Fallback to a default ID only if backend request fails
-        setTelegramBotId('6853268089');
-      } finally {
-        setTelegramConfigLoaded(true);
-      }
-    };
-    
-    fetchTelegramConfig();
-  }, []);
+  // Telegram login is handled by the useEffect hook above that injects the script
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -594,150 +662,134 @@ export function AuthForm({ type }: AuthFormProps) {
     }
   };
 
-  const handleTelegramResponse = async (response: any) => {
-    setError(null);
-    setSuccess(null);
-    setTelegramLoading(true);
-
-    // Temporarily override console.error to suppress warnings
-    const originalConsoleError = console.error;
-    console.error = (...args) => {
-      // Filter out permission denied errors
-      const errorMessage = args.length > 0 && typeof args[0] === 'string' ? args[0] : '';
-      if (errorMessage.includes('Permission denied') ||
-          (args.length > 0 && args[0] instanceof Error && args[0].message.includes('Permission denied'))) {
-        return; // Suppress these specific errors
-      }
-      originalConsoleError.apply(console, args);
-    };
-
+  // Function to handle Telegram login data
+  const handleTelegramLoginData = async (data: any) => {
     try {
-      // Verify Telegram login data on your backend
-      // This is a simplified example - in a real app, you would need to verify the auth_date and hash
-      // on your backend to ensure the data is authentic
+      setError(null);
       
-      const { id, first_name, last_name, username, photo_url, auth_date, hash } = response;
+      // Log for debugging
+      console.log('Processing Telegram login data:', data);
       
-      // In a real implementation, you would make an API call to your backend to verify the hash
-      // and create a Firebase custom token
-      // For now, we'll simulate this process
+      if (!data || !data.id) {
+        console.error('Invalid data from Telegram');
+        setError('Failed to authenticate with Telegram. Please try again.');
+        return;
+      }
       
-      // Create a unique email-like identifier for this Telegram user
-      const telegramEmail = `telegram_${id}@telegram.auth`;
+      // Extract user data from Telegram response
+      const { id, first_name, last_name, username, photo_url, auth_date, hash } = data;
+      
+      // Create a display name from the available fields
+      const displayName = username || first_name || `Telegram User ${id.substring(0, 6)}`;
+      
+      // Prepare data for backend validation and authentication
+      const telegramData = {
+        id,
+        first_name: first_name || '',
+        last_name: last_name || '',
+        username: username || '',
+        photo_url: photo_url || '',
+        auth_date,
+        hash
+      };
       
       try {
-        // Check if user already exists in your database
-        // We'll use a try-catch here to handle permission errors
-        const userRef = ref(database, `users/${id}`);
-        let userExists = false;
+        // Send data to backend for validation and authentication
+        const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(telegramData)
+        });
         
-        try {
-          const userSnapshot = await get(userRef);
-          userExists = userSnapshot.exists();
-        } catch (checkError) {
-          // Silently handle permission errors
-          userExists = false;
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error('Backend validation failed:', errorData.message || 'Unknown error');
+          setError('Failed to validate Telegram authentication. Please try again.');
+          return;
         }
         
-        if (!userExists) {
-          // This is a new user, create their account
-          try {
-            // Generate a unique referral code
-            const displayName = username || first_name || `user_${id}`;
-            let uniqueReferralCode;
-            
-            try {
-              uniqueReferralCode = await generateUniqueReferralCode(displayName, id);
-            } catch (codeError) {
-              // Silently handle error without logging
-              const safeId = id || '';
-              const safeDisplayName = displayName || '';
-              uniqueReferralCode = `${safeDisplayName.toLowerCase().replace(/[^a-z0-9]/gi, '').substring(0, 6)}${safeId ? safeId.substring(0, 4) : Math.random().toString(36).substring(2, 6)}`;
-            }
-            
-            // Initialize user data
-            const initialUserData = {
-              tokens: 100,
-              name: `${first_name || ''} ${last_name || ''}`.trim(),
-              username: username || null,
-              telegramId: id,
-              photoUrl: photo_url || null,
-              email: null, // Telegram users may not have email
-              referredBy: referralCode || null,
-              referralCode: uniqueReferralCode,
-              referralCount: 0,
-              referrals: {},
-              authProvider: 'telegram',
-              createdAt: new Date().toISOString(),
-              updatedAt: new Date().toISOString()
-            };
-            
-            // Create user in database
-            try {
-              await set(userRef, initialUserData);
-            } catch (setError) {
-              // Silently handle permission errors
-              // We'll continue with the login process anyway
-            }
-            
-            // Process referral if code exists
-            if (referralCode) {
-              try {
-                // Call the serverless function to process the referral
-                const referralResponse = await fetch('/.netlify/functions/process-referral', {
-                  method: 'POST',
-                  headers: {
-                    'Content-Type': 'application/json',
-                  },
-                  body: JSON.stringify({
-                    referralCode,
-                    userId: id,
-                    userEmail: null,
-                    userName: `${first_name || ''} ${last_name || ''}`.trim(),
-                    authProvider: 'telegram'
-                  }),
-                });
-
-                const referralResult = await referralResponse.json();
-                if (!referralResponse.ok) {
-                  console.error('Error processing referral:', referralResult.error);
-                } else {
-                  console.log('Referral processed successfully:', referralResult.message);
-                }
-              } catch (referralError) {
-                // Silently handle error
-              }
-            }
-          } catch (userDataError) {
-            // Silently handle error without logging
-          }
+        const authData = await response.json();
+        
+        // If we get a token from the backend, use it
+        if (authData.token) {
+          // Store the token
+          localStorage.setItem('auth_token', authData.token);
+          
+          // Redirect to dashboard or home page
+          navigate('/');
+          return;
         }
-      } catch (dbError) {
-        // Silently handle database errors
-        // We'll continue with the login process
+      } catch (backendError) {
+        console.error('Error communicating with backend:', backendError);
+        // Fall back to Firebase authentication if backend fails
       }
       
-      // Store user info in session storage
-      sessionStorage.setItem('telegramUser', JSON.stringify({
-        id,
-        name: `${first_name || ''} ${last_name || ''}`.trim(),
-        username,
-        photoUrl: photo_url
-      }));
+      // If we don't get a token from the backend, try to create a Firebase user
+      // Generate a unique email for the Telegram user
+      const email = `telegram_${id}@telegram.auth`;
+      // Generate a secure random password
+      const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
       
-      // Navigate to home page
-      navigate('/');
-      
-    } catch (err) {
-      setError(
-        err instanceof Error 
-          ? err.message 
-          : 'Telegram authentication failed'
-      );
-    } finally {
-      setTelegramLoading(false);
-      // Restore original console.error
-      console.error = originalConsoleError;
+      try {
+        // Try to sign in first (in case user already exists)
+        try {
+          const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          // User exists and is signed in
+          const user = userCredential.user;
+          
+          // Update profile if needed
+          if (user.displayName !== displayName || !user.photoURL) {
+            await updateProfile(user, {
+              displayName,
+              photoURL: photo_url || null
+            });
+          }
+          
+          // Redirect to dashboard
+          navigate('/');
+        } catch (signInError) {
+          // User doesn't exist, create a new account
+          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+          const user = userCredential.user;
+          
+          // Set display name and photo URL
+          await updateProfile(user, {
+            displayName,
+            photoURL: photo_url || null
+          });
+          
+          // Create user record in database
+          const userRef = ref(database, `users/${user.uid}`);
+          await set(userRef, {
+            email,
+            displayName,
+            photoURL: photo_url || null,
+            telegramId: id,
+            telegramUsername: username || null,
+            createdAt: new Date().toISOString(),
+            referralCode: generateUniqueReferralCode(),
+            referredBy: referralCode || null
+          });
+          
+          // If there's a referral code, update the referrer's stats
+          if (referralCode) {
+            // Find the user with this referral code
+            // This would typically be done on the backend
+            console.log('User referred by:', referralCode);
+          }
+          
+          // Redirect to dashboard
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Firebase auth error:', error);
+        setError('Failed to create user account. Please try again.');
+      }
+    } catch (error) {
+      console.error('Telegram login processing error:', error);
+      setError('An unexpected error occurred. Please try again.');
     }
   };
 
@@ -894,7 +946,6 @@ export function AuthForm({ type }: AuthFormProps) {
               disabled={
                 loading || 
                 googleLoading || 
-                telegramLoading || 
                 (type === 'register' && (emailValid === false || passwordValid === false || (name.trim().length > 0 && nameValid === false)))
               }
               className="w-full py-3 px-4 rounded-lg transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
@@ -922,7 +973,7 @@ export function AuthForm({ type }: AuthFormProps) {
               <button
                 type="button"
                 onClick={handleGoogleSignIn}
-                disabled={loading || googleLoading || telegramLoading}
+                disabled={loading || googleLoading}
                 className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
                 style={{
                   background: 'rgba(24, 24, 27, 0.92)',
@@ -948,63 +999,31 @@ export function AuthForm({ type }: AuthFormProps) {
               
               <button
                 type="button"
-                onClick={() => {
-                  if (!telegramConfigLoaded || !telegramBotId) {
-                    return;
-                  }
-                  
-                  setTelegramLoading(true);
-                  // Open Telegram login in a popup window
-                  const width = 550;
-                  const height = 470;
-                  const left = window.innerWidth / 2 - width / 2;
-                  const top = window.innerHeight / 2 - height / 2;
-                  
-                  // Use Telegram's official Bot API URL format
-                  const telegramAuthUrl = `https://t.me/${telegramBotName}/auth?to=${encodeURIComponent(window.location.origin)}`;
-                  
-                  const popup = window.open(
-                    telegramAuthUrl,
-                    'TelegramAuth',
-                    `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0,toolbar=0`
-                  );
-                  
-                  // Check for popup close or message
-                  const popupTick = setInterval(() => {
-                    if (popup?.closed) {
-                      clearInterval(popupTick);
-                      setTelegramLoading(false);
-                    }
-                  }, 500);
-                  
-                  // Listen for message from popup
-                  window.addEventListener('message', (event) => {
-                    if (event.data?.user && event.data?.user?.id) {
-                      handleTelegramResponse(event.data.user);
-                      if (popup && !popup.closed) popup.close();
-                      clearInterval(popupTick);
-                    }
-                  }, { once: true });
-                }}
-                disabled={loading || googleLoading || telegramLoading}
-                className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
                 style={{
                   background: 'rgba(24, 24, 27, 0.92)',
                   boxShadow: '0 0 10px rgba(0, 169, 224, 0.10)',
                   border: 'none',
                   fontSize: '0.9rem'
                 }}
+                onClick={() => {
+                  // Open Telegram login in a popup window
+                  const width = 550;
+                  const height = 470;
+                  const left = (window.innerWidth - width) / 2;
+                  const top = (window.innerHeight - height) / 2;
+                  
+                  window.open(
+                    `https://oauth.telegram.org/auth?bot_id=${telegramBotId}&origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}`,
+                    'Telegram Login',
+                    `width=${width},height=${height},left=${left},top=${top}`
+                  );
+                }}
               >
-                {telegramLoading ? (
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                ) : (
-                  <>
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
-                      <path fill="#29B6F6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.05.01-.23-.08-.33-.09-.1-.25-.07-.36-.04-.16.04-2.64 1.68-3.89 2.46-.37.25-.7.37-1.24.37-.41 0-1.2-.21-1.78-.39-.72-.23-1.29-.35-1.24-.75.03-.2.38-.41 1.03-.62 4.05-1.78 6.75-2.95 8.04-3.52.76-.36 1.83-.85 2.25-.85.13 0 .29.03.42.19.12.17.13.38.08.55z"/>
-                    </svg>
-                    <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
-                  </>
-                )}
+                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                  <path fill="#29B6F6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.05.01-.23-.08-.33-.09-.1-.25-.07-.36-.04-.16.04-2.64 1.68-3.89 2.46-.37.25-.7.37-1.24.37-.41 0-1.2-.21-1.78-.39-.72-.23-1.29-.35-1.24-.75.03-.2.38-.41 1.03-.62 4.05-1.78 6.75-2.95 8.04-3.52.76-.36 1.83-.85 2.25-.85.13 0 .29.03.42.19.12.17.13.38.08.55z"/>
+                </svg>
+                <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
               </button>
             </div>
           </div>
