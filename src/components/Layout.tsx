@@ -12,6 +12,15 @@ interface LayoutProps {
 }
 
 export function Layout({ children }: LayoutProps) {
+  // Responsive window width tracking for layout
+  const [windowWidth, setWindowWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1024
+  );
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
   // Remove isAuthPage check to always show navbar
   const isAuthPage = false;
   const [showChat, setShowChat] = useState(false);
@@ -107,7 +116,11 @@ export function Layout({ children }: LayoutProps) {
             height: 'calc(100vh - 90px)', 
             position: 'relative', 
             marginTop: 0,
-            marginLeft: user ? (isCollapsed ? '4rem' : '16rem') : 0,
+            marginLeft: user
+  ? (windowWidth <= 768
+      ? '1rem'
+      : (isCollapsed ? '4rem' : '16rem'))
+  : 0,
             transition: 'margin-left 0.3s ease-in-out'
           }}
         >
