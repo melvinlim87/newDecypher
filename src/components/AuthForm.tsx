@@ -950,15 +950,34 @@ export function AuthForm({ type }: AuthFormProps) {
         .telegram-button-container {
           display: flex;
           justify-content: center;
+          align-items: center;
           margin-top: 0;
           height: 48px;
+          overflow: visible;
+          position: relative;
         }
         
         /* Override Telegram button styles to match theme */
         .telegram-button-container iframe {
           max-width: 100% !important;
           width: 100% !important;
-          height: 46px !important;
+          height: 48px !important;
+          position: relative;
+          z-index: 10;
+          transform: scale(1.01); /* Slightly scale up to ensure text is visible */
+        }
+        
+        /* Mobile responsiveness for Telegram button */
+        @media (max-width: 768px) {
+          .telegram-button-container iframe {
+            transform: scale(1.05);
+          }
+        }
+        
+        @media (max-width: 400px) {
+          .telegram-button-container iframe {
+            transform: scale(1.1);
+          }
         }
       `}</style>
     </div>
