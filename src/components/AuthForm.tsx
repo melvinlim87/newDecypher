@@ -78,28 +78,22 @@ export function AuthForm({ type }: AuthFormProps) {
   useEffect(() => {
     const fetchTelegramConfig = async () => {
       try {
-        console.log('Fetching Telegram config from:', `${API_BASE_URL}/config/telegram`);
+        
         const response = await fetch(`${API_BASE_URL}/config/telegram`);
         const data = await response.json();
-        console.log('Telegram config API response:', data);
+        
         
         if (data.bot_id) {
-          console.log('Setting Telegram bot ID to:', data.bot_id);
           setTelegramBotId(data.bot_id);
         } else {
-          console.error('No Telegram bot ID found in backend response');
           // Fallback to a default ID only if backend request fails
-          console.log('Using fallback Telegram bot ID');
           setTelegramBotId('6853268089');
         }
       } catch (error) {
-        console.error('Error fetching Telegram config:', error);
         // Fallback to a default ID only if backend request fails
-        console.log('Using fallback Telegram bot ID due to error');
         setTelegramBotId('6853268089');
       } finally {
         setTelegramConfigLoaded(true);
-        console.log('Telegram config loaded state set to true');
       }
     };
     
@@ -955,12 +949,7 @@ export function AuthForm({ type }: AuthFormProps) {
               <button
                 type="button"
                 onClick={() => {
-                  console.log('Telegram login button clicked');
-                  console.log('Telegram config loaded:', telegramConfigLoaded);
-                  console.log('Current Telegram bot ID:', telegramBotId);
-                  
                   if (!telegramConfigLoaded || !telegramBotId) {
-                    console.error('Telegram bot ID not loaded yet');
                     return;
                   }
                   
@@ -972,10 +961,7 @@ export function AuthForm({ type }: AuthFormProps) {
                   const top = window.innerHeight / 2 - height / 2;
                   
                   // Use Telegram's official Bot API URL format
-                  // Note: Telegram uses different URL formats for different auth methods
-                  // Try the standard Telegram Login Widget approach first
                   const telegramAuthUrl = `https://t.me/${telegramBotName}/auth?to=${encodeURIComponent(window.location.origin)}`;
-                  console.log('Opening Telegram auth URL:', telegramAuthUrl);
                   
                   const popup = window.open(
                     telegramAuthUrl,
