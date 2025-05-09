@@ -423,7 +423,7 @@ setMessages((prev) => [...prev, { sender: 'assistant', text: 'Analyzing complete
           </div>
 
           {/* Right Panel - Chat */}
-          <div className="metallic-brush-right-panel scrollbar-hide" style={{ flex: '4', minWidth: '320px', maxWidth: '520px', overflow: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none', height: '100%', maxHeight: '100%', position: 'relative' }}>
+          <div className="metallic-brush-right-panel scrollbar-hide" style={{ flex: '4', minWidth: '320px', maxWidth: '520px', overflowY: 'auto', overflowX: 'hidden', display: 'flex', flexDirection: 'column', scrollbarWidth: 'none', msOverflowStyle: 'none', height: '100%', maxHeight: '100%', position: 'relative' }}>
             <div className="metallic-brush-chat-header" style={{ flexShrink: 0 }}>
               <h2 className="text-xl font-semibold">Chat Analysis</h2>
               <div className="metallic-brush-model-selector">
