@@ -1017,35 +1017,39 @@ export function AuthForm({ type }: AuthFormProps) {
                 )}
               </button>
               
-              <button
-                type="button"
-                className="flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-                style={{
-                  background: 'rgba(24, 24, 27, 0.92)',
-                  boxShadow: '0 0 10px rgba(0, 169, 224, 0.10)',
-                  border: 'none',
-                  fontSize: '0.9rem'
-                }}
-                onClick={() => {
-                  // Open Telegram login in a popup window
-                  const width = 550;
-                  const height = 470;
-                  const left = (window.innerWidth - width) / 2;
-                  const top = (window.innerHeight - height) / 2;
-                  
-                  // Use the direct link to the Telegram bot
-                  window.open(
-                    `https://t.me/${telegramBotId}`,
-                    'Telegram Login',
-                    `width=${width},height=${height},left=${left},top=${top}`
-                  );
-                }}
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
-                  <path fill="#29B6F6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.05.01-.23-.08-.33-.09-.1-.25-.07-.36-.04-.16.04-2.64 1.68-3.89 2.46-.37.25-.7.37-1.24.37-.41 0-1.2-.21-1.78-.39-.72-.23-1.29-.35-1.24-.75.03-.2.38-.41 1.03-.62 4.05-1.78 6.75-2.95 8.04-3.52.76-.36 1.83-.85 2.25-.85.13 0 .29.03.42.19.12.17.13.38.08.55z"/>
-                </svg>
-                <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
-              </button>
+              <div id="telegram-login-container" className="flex-1 flex items-center justify-center">
+                {telegramBotId && (
+                  <div className="telegram-login-button">
+                    <iframe
+                      src={`https://oauth.telegram.org/embed/${telegramBotId}?origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}&size=large&request_access=write`}
+                      width="100%"
+                      height="48px"
+                      frameBorder="0"
+                      scrolling="no"
+                      seamless
+                      style={{ border: 'none', overflow: 'hidden' }}
+                    />
+                  </div>
+                )}
+                {!telegramBotId && (
+                  <button
+                    type="button"
+                    className="flex items-center justify-center gap-2 px-4 py-3 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed w-full"
+                    style={{
+                      background: 'rgba(24, 24, 27, 0.92)',
+                      boxShadow: '0 0 10px rgba(0, 169, 224, 0.10)',
+                      border: 'none',
+                      fontSize: '0.9rem'
+                    }}
+                    disabled={true}
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                      <path fill="#29B6F6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.05.01-.23-.08-.33-.09-.1-.25-.07-.36-.04-.16.04-2.64 1.68-3.89 2.46-.37.25-.7.37-1.24.37-.41 0-1.2-.21-1.78-.39-.72-.23-1.29-.35-1.24-.75.03-.2.38-.41 1.03-.62 4.05-1.78 6.75-2.95 8.04-3.52.76-.36 1.83-.85 2.25-.85.13 0 .29.03.42.19.12.17.13.38.08.55z"/>
+                    </svg>
+                    <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </form>
