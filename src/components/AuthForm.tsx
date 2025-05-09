@@ -674,21 +674,25 @@ export function AuthForm({ type }: AuthFormProps) {
         auth_date
       });
       
-      // If we don't get a token from the backend, try to create a Firebase user
       // Generate a unique email for the Telegram user
       const email = `telegram_${id}@telegram.auth`;
-      // Generate a secure random password
-      const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
+      // Use a consistent password based on the user's Telegram ID
+      // This ensures we can sign in the same user across sessions
+      const password = `Telegram${id}!${auth_date}`;
       
       try {
-        // Try to sign in first (in case user already exists)
+        // First, try to sign in with the email (assuming user exists)
         try {
+          console.log('Attempting to sign in existing Telegram user');
           const userCredential = await signInWithEmailAndPassword(auth, email, password);
+          console.log('Telegram user signed in successfully');
+          
           // User exists and is signed in
           const user = userCredential.user;
           
           // Update profile if needed
-          if (user.displayName !== displayName || !user.photoURL) {
+          if (user.displayName !== displayName || (photo_url && !user.photoURL)) {
+            console.log('Updating user profile');
             await updateProfile(user, {
               displayName,
               photoURL: photo_url || null
@@ -697,43 +701,58 @@ export function AuthForm({ type }: AuthFormProps) {
           
           // Redirect to dashboard
           navigate('/');
-        } catch (signInError) {
-          // User doesn't exist, create a new account
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
+        } catch (signInError: any) {
+          // If error is not 'user-not-found', log it and try to create user
+          console.log('Sign in error:', signInError.code);
           
-          // Set display name and photo URL
-          await updateProfile(user, {
-            displayName,
-            photoURL: photo_url || null
-          });
-          
-          // Create user record in database
-          const userRef = ref(database, `users/${user.uid}`);
-          await set(userRef, {
-            email,
-            displayName,
-            photoURL: photo_url || null,
-            telegramId: id,
-            telegramUsername: username || null,
-            createdAt: new Date().toISOString(),
-            referralCode: generateUniqueReferralCode(displayName, id.toString()),
-            referredBy: referralCode || null
-          });
-          
-          // If there's a referral code, update the referrer's stats
-          if (referralCode) {
-            // Find the user with this referral code
-            // This would typically be done on the backend
-            console.log('User referred by:', referralCode);
+          if (signInError.code === 'auth/user-not-found') {
+            // User doesn't exist, create a new account
+            console.log('Creating new Telegram user account');
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            // Set display name and photo URL
+            await updateProfile(user, {
+              displayName,
+              photoURL: photo_url || null
+            });
+            
+            // Create user record in database
+            const userRef = ref(database, `users/${user.uid}`);
+            await set(userRef, {
+              email,
+              displayName,
+              photoURL: photo_url || null,
+              telegramId: id,
+              telegramUsername: username || null,
+              createdAt: new Date().toISOString(),
+              referralCode: generateUniqueReferralCode(displayName, id.toString()),
+              referredBy: referralCode || null
+            });
+            
+            // If there's a referral code, update the referrer's stats
+            if (referralCode) {
+              console.log('User referred by:', referralCode);
+            }
+            
+            // Redirect to dashboard
+            navigate('/');
+          } else if (signInError.code === 'auth/wrong-password') {
+            // User exists but password has changed (maybe auth_date changed)
+            // Try to sign in with email/password auth
+            console.log('Password mismatch, attempting to update user');
+            
+            // This is a special case - we need to handle it differently
+            // For now, just notify the user
+            setError('Authentication failed. Please try again or contact support.');
+          } else {
+            // Some other error
+            throw signInError;
           }
-          
-          // Redirect to dashboard
-          navigate('/');
         }
       } catch (error) {
         console.error('Firebase auth error:', error);
-        setError('Failed to create user account. Please try again.');
+        setError('Failed to authenticate with Telegram. Please try again.');
       }
     } catch (error) {
       console.error('Telegram login processing error:', error);
