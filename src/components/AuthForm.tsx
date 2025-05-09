@@ -917,32 +917,59 @@ export function AuthForm({ type }: AuthFormProps) {
                 )}
               </button>
               
-              <div className="telegram-button-container relative flex-1">
-               <div style={{
-                 position: 'absolute',
-                 inset: 0,
-                 background: 'rgba(24, 24, 27, 0.92)',
-                 borderRadius: '8px',
-                 border: 'none',
-                 boxShadow: '0 0 10px rgba(0, 169, 224, 0.10)',
-                 zIndex: -1
-               }}></div>
-                <TelegramLoginButton
-                  dataOnauth={handleTelegramResponse}
-                  botName={telegramBotName}
-                  buttonSize="medium"
-                  cornerRadius={8}
-                  requestAccess="write"
-                  usePic={false}
-                />
-                {telegramLoading && (
-                  <div className={`absolute inset-0 flex items-center justify-center rounded-md ${
-                    theme === 'dark' ? 'bg-gray-800/80' : 'bg-blue-800/50'
-                  }`}>
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                  </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setTelegramLoading(true);
+                  // Open Telegram login in a popup window
+                  const width = 550;
+                  const height = 470;
+                  const left = window.innerWidth / 2 - width / 2;
+                  const top = window.innerHeight / 2 - height / 2;
+                  
+                  const popup = window.open(
+                    `https://oauth.telegram.org/auth?bot_id=${telegramBotName}&origin=${encodeURIComponent(window.location.origin)}&return_to=${encodeURIComponent(window.location.href)}`,
+                    'TelegramAuth',
+                    `width=${width},height=${height},left=${left},top=${top},status=0,location=0,menubar=0,toolbar=0`
+                  );
+                  
+                  // Check for popup close or message
+                  const popupTick = setInterval(() => {
+                    if (popup?.closed) {
+                      clearInterval(popupTick);
+                      setTelegramLoading(false);
+                    }
+                  }, 500);
+                  
+                  // Listen for message from popup
+                  window.addEventListener('message', (event) => {
+                    if (event.data?.user && event.data?.user?.id) {
+                      handleTelegramResponse(event.data.user);
+                      if (popup && !popup.closed) popup.close();
+                      clearInterval(popupTick);
+                    }
+                  }, { once: true });
+                }}
+                disabled={loading || googleLoading || telegramLoading}
+                className={`flex-1 flex items-center justify-center gap-2 px-4 py-4 rounded-md transition-all duration-300 hover:transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed`}
+                style={{
+                  background: 'rgba(24, 24, 27, 0.92)',
+                  boxShadow: '0 0 10px rgba(0, 169, 224, 0.10)',
+                  border: 'none',
+                  fontSize: '0.9rem'
+                }}
+              >
+                {telegramLoading ? (
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                ) : (
+                  <>
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24">
+                      <path fill="#29B6F6" d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm4.64 6.8c-.15 1.58-.8 5.42-1.13 7.19-.14.75-.42 1-.68 1.03-.58.05-1.02-.38-1.58-.75-.88-.58-1.38-.94-2.23-1.5-.99-.65-.35-1.01.22-1.59.15-.15 2.71-2.48 2.76-2.69.01-.05.01-.23-.08-.33-.09-.1-.25-.07-.36-.04-.16.04-2.64 1.68-3.89 2.46-.37.25-.7.37-1.24.37-.41 0-1.2-.21-1.78-.39-.72-.23-1.29-.35-1.24-.75.03-.2.38-.41 1.03-.62 4.05-1.78 6.75-2.95 8.04-3.52.76-.36 1.83-.85 2.25-.85.13 0 .29.03.42.19.12.17.13.38.08.55z"/>
+                    </svg>
+                    <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
+                  </>
                 )}
-              </div>
+              </button>
             </div>
           </div>
         </form>
