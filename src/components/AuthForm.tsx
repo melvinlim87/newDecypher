@@ -23,6 +23,7 @@ declare global {
   interface Window {
     recaptchaLoaded?: boolean;
     onRecaptchaLoadCallback?: () => void;
+    onTelegramAuth: (user: any) => void;
     Telegram?: {
       Login?: {
         auth: (options: { bot_id: string, request_access?: boolean }, callback: (data: any) => void) => void;
@@ -42,58 +43,10 @@ interface AuthFormProps {
   type: 'login' | 'register';
 }
 
-// Function to handle Telegram auth response
-const handleTelegramLoginData = async (user: any) => {
-  if (!user || !user.id) {
-    console.error('Invalid data from Telegram');
-    return;
-  }
+// This function will be connected to the component's handleTelegramLoginData method
+// The global onTelegramAuth function will call the component's method
 
-  try {
-    // Send the Telegram data to the backend for validation
-    const response = await axios.post(`${import.meta.env.VITE_API_URL}/api/auth/telegram`, user);
-    
-    if (response.data && response.data.token) {
-      // Store the token and user data
-      localStorage.setItem('token', response.data.token.toString());
-      localStorage.setItem('user', JSON.stringify(response.data.user || {}));
-      
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
-    } else {
-      // If no token is returned, try to create a Firebase account
-      const credential = await createUserWithEmailAndPassword(
-        auth,
-        `telegram${user.id}@telegram.com`,
-        `Telegram${user.id}!`
-      );
-      
-      // Update the user profile with Telegram data
-      await updateProfile(credential.user, {
-        displayName: `${user.first_name} ${user.last_name || ''}`.trim(),
-        photoURL: user.photo_url || ''
-      });
-      
-      // Redirect to dashboard
-      window.location.href = '/dashboard';
-    }
-  } catch (error) {
-    console.error('Error processing Telegram login:', error);
-  }
-};
-
-// Add the onTelegramAuth function to the window object so it can be called by the Telegram widget
-declare global {
-  interface Window {
-    onTelegramAuth: (user: any) => void;
-  }
-}
-
-// Make the function available globally
-window.onTelegramAuth = (user: any) => {
-  console.log('Telegram auth successful:', user);
-  handleTelegramLoginData(user);
-};
+// The global onTelegramAuth function is declared at the top of the file
 
 export function AuthForm({ type }: AuthFormProps) {
   const navigate = useNavigate();
@@ -114,12 +67,11 @@ export function AuthForm({ type }: AuthFormProps) {
   
   // State for Telegram login
   const [telegramBotId, setTelegramBotId] = useState<string>('');
-  
+
   // Fetch Telegram bot ID from backend
   useEffect(() => {
     const fetchTelegramBotId = async () => {
       try {
-        // Hard-coded fallback bot username (replace with your actual Telegram bot username)
         const fallbackBotId = 'DecyphersAIBot';
         
         console.log('Fetching Telegram bot ID from API...');
@@ -133,27 +85,32 @@ export function AuthForm({ type }: AuthFormProps) {
         const responseData = response.data as { bot_id?: string };
         
         if (responseData && responseData.bot_id) {
-          console.log('Setting Telegram bot ID from API:', responseData.bot_id);
-          setTelegramBotId(responseData.bot_id.toString());
+          setTelegramBotId(responseData.bot_id);
         } else {
-          console.log('Using fallback Telegram bot ID:', fallbackBotId);
+          console.log(`Using fallback Telegram bot ID: ${fallbackBotId}`);
           setTelegramBotId(fallbackBotId);
         }
       } catch (error) {
         console.error('Error fetching Telegram bot ID:', error);
-        // Use fallback bot ID in case of error
-        const fallbackBotId = 'DecyphersAIBot';
-        console.log('Using fallback Telegram bot ID after error:', fallbackBotId);
-        setTelegramBotId(fallbackBotId);
+        setTelegramBotId('DecyphersAIBot'); // Fallback
       }
     };
-    
+
     fetchTelegramBotId();
   }, []);
   
   // Create and inject the Telegram login button when telegramBotId is available
   useEffect(() => {
     if (!telegramBotId) return;
+    
+    // Define the global callback function that Telegram will call
+    window.onTelegramAuth = (user: any) => {
+      console.log('Telegram auth successful:', user);
+      // Call the component method to handle Telegram login
+      if (user && user.id) {
+        handleTelegramLoginData(user);
+      }
+    };
     
     // Clear any existing button
     const container = document.getElementById('telegram-login-container');
@@ -172,6 +129,12 @@ export function AuthForm({ type }: AuthFormProps) {
       // Append to container
       container.appendChild(script);
     }
+    
+    // Clean up
+    return () => {
+      // @ts-ignore - TypeScript doesn't know about this global property
+      delete window.onTelegramAuth;
+    };
   }, [telegramBotId]);
   
   // Validation states
