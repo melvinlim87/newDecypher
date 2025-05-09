@@ -660,54 +660,19 @@ export function AuthForm({ type }: AuthFormProps) {
       }
       
       // Extract user data from Telegram response
-      const { id, first_name, last_name, username, photo_url, auth_date, hash } = data;
+      const { id, first_name, last_name, username, photo_url, auth_date } = data;
       
       // Create a display name from the available fields
       const displayName = username || first_name || `Telegram User ${id.substring(0, 6)}`;
       
-      // Prepare data for backend validation and authentication
-      const telegramData = {
+      console.log('Processing Telegram login with Firebase', {
         id,
-        first_name: first_name || '',
-        last_name: last_name || '',
-        username: username || '',
-        photo_url: photo_url || '',
-        auth_date,
-        hash
-      };
-      
-      try {
-        // Send data to backend for validation and authentication
-        const response = await fetch(`${API_BASE_URL}/auth/telegram`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify(telegramData)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json();
-          console.error('Backend validation failed:', errorData.message || 'Unknown error');
-          setError('Failed to validate Telegram authentication. Please try again.');
-          return;
-        }
-        
-        const authData = await response.json();
-        
-        // If we get a token from the backend, use it
-        if (authData.token) {
-          // Store the token
-          localStorage.setItem('auth_token', authData.token);
-          
-          // Redirect to dashboard or home page
-          navigate('/');
-          return;
-        }
-      } catch (backendError) {
-        console.error('Error communicating with backend:', backendError);
-        // Fall back to Firebase authentication if backend fails
-      }
+        first_name,
+        last_name,
+        username,
+        photo_url,
+        auth_date
+      });
       
       // If we don't get a token from the backend, try to create a Firebase user
       // Generate a unique email for the Telegram user
@@ -752,7 +717,7 @@ export function AuthForm({ type }: AuthFormProps) {
             telegramId: id,
             telegramUsername: username || null,
             createdAt: new Date().toISOString(),
-            referralCode: generateUniqueReferralCode(),
+            referralCode: generateUniqueReferralCode(displayName, id.toString()),
             referredBy: referralCode || null
           });
           
