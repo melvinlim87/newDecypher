@@ -66,7 +66,9 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
           console.log('Fetching reCAPTCHA site key from:', `${API_BASE_URL}/config/recaptcha`);
           // First, try to get a CSRF cookie if needed
           try {
-            await axios.get(`${API_BASE_URL.split('/api')[0]}/sanctum/csrf-cookie`, {
+            // Properly construct the base URL for the CSRF cookie request
+            const baseUrl = 'https://api.decyphers.com';
+            await axios.get(`${baseUrl}/sanctum/csrf-cookie`, {
               withCredentials: true
             });
             console.log('CSRF cookie request completed');
