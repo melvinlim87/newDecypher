@@ -59,16 +59,43 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
     const fetchSiteKey = async () => {
       try {
         setLoading(true);
-        const response = await axios.get<{success: boolean, siteKey: string}>(`${API_BASE_URL}/config/recaptcha`);
-        if (response.data.success && response.data.siteKey) {
-          setSiteKey(response.data.siteKey);
-        } else {
-          console.error('Failed to fetch reCAPTCHA site key');
-          onError?.('reCAPTCHA configuration error');
-          setError(true);
+        // Hardcoded fallback site key from the memory
+        const fallbackSiteKey = '6LdIpc8qAAAAAJ8_1lOuFEsSArrACxUVMOUZIxsp';
+        
+        try {
+          console.log('Fetching reCAPTCHA site key from:', `${API_BASE_URL}/config/recaptcha`);
+          // First, try to get a CSRF cookie if needed
+          try {
+            await axios.get(`${API_BASE_URL.split('/api')[0]}/sanctum/csrf-cookie`, {
+              withCredentials: true
+            });
+            console.log('CSRF cookie request completed');
+          } catch (csrfError) {
+            console.log('CSRF cookie request (this might fail safely):', csrfError);
+          }
+          
+          // Then make the actual request with credentials
+          const response = await axios.get<{success: boolean, siteKey: string}>(`${API_BASE_URL}/config/recaptcha`, {
+            withCredentials: true,
+            headers: {
+              'Accept': 'application/json',
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
+            }
+          });
+          if (response.data.success && response.data.siteKey) {
+            console.log('Successfully fetched reCAPTCHA site key from API');
+            setSiteKey(response.data.siteKey);
+          } else {
+            console.warn('API returned success:false, using fallback site key');
+            setSiteKey(fallbackSiteKey);
+          }
+        } catch (apiError) {
+          console.warn('Error fetching from API, using fallback site key:', apiError);
+          setSiteKey(fallbackSiteKey);
         }
       } catch (err) {
-        console.error('Error fetching reCAPTCHA site key:', err);
+        console.error('Critical error in reCAPTCHA initialization:', err);
         onError?.('reCAPTCHA configuration error');
         setError(true);
       } finally {
@@ -78,6 +105,7 @@ export const ReCaptcha = memo(forwardRef<ReCaptchaRef, ReCaptchaProps>(({ onVeri
     
     fetchSiteKey();
   }, [onError, API_BASE_URL]);
+
   
   const handleVerify = useCallback(async (token: string) => {
     console.log('reCAPTCHA token received:', token);
