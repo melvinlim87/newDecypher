@@ -733,11 +733,24 @@ export function AuthForm({ type }: AuthFormProps) {
             // Since we can't sign in with password (we don't know the original password),
             // we need to use the backend to generate a custom token or handle this case
             try {
+              // First, try to get a CSRF cookie if needed
+              try {
+                await fetch(`${API_BASE_URL.split('/api')[0]}/sanctum/csrf-cookie`, {
+                  credentials: 'include'
+                });
+                console.log('CSRF cookie request completed for Telegram auth');
+              } catch (csrfError) {
+                console.log('CSRF cookie request (this might fail safely):', csrfError);
+              }
+              
               // Try to get a custom token from the backend
               const tokenResponse = await fetch(`${API_BASE_URL}/auth/telegram-token`, {
                 method: 'POST',
+                credentials: 'include',  // Important for CORS with cookies
                 headers: {
-                  'Content-Type': 'application/json'
+                  'Content-Type': 'application/json',
+                  'Accept': 'application/json',
+                  'X-Requested-With': 'XMLHttpRequest'
                 },
                 body: JSON.stringify({
                   telegram_id: id,
