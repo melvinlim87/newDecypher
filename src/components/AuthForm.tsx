@@ -9,7 +9,9 @@ import {
   updateProfile, 
   sendPasswordResetEmail,
   GoogleAuthProvider,
-  signInWithPopup
+  signInWithPopup,
+  fetchSignInMethodsForEmail,
+  signInWithCustomToken
 } from 'firebase/auth';
 import { database } from '../lib/firebase';
 import { ref, set, get, update } from 'firebase/database';
@@ -716,55 +718,89 @@ export function AuthForm({ type }: AuthFormProps) {
       const password = Math.random().toString(36).slice(-10) + Math.random().toString(36).slice(-10);
       
       try {
-        // Try to sign in first (in case user already exists)
+        // Check if a user with this email already exists
+        console.log('Checking if Telegram user already exists...');
+        
         try {
-          const userCredential = await signInWithEmailAndPassword(auth, email, password);
-          // User exists and is signed in
-          const user = userCredential.user;
+          // First, try to find the user by email
+          const methods = await fetchSignInMethodsForEmail(auth, email);
+          console.log('Sign-in methods for email:', methods);
           
-          // Update profile if needed
-          if (user.displayName !== displayName || !user.photoURL) {
+          if (methods && methods.length > 0) {
+            // User exists, we need to handle this differently
+            console.log('User already exists, attempting to sign in with custom token');
+            
+            // Since we can't sign in with password (we don't know the original password),
+            // we need to use the backend to generate a custom token or handle this case
+            try {
+              // Try to get a custom token from the backend
+              const tokenResponse = await fetch(`${API_BASE_URL}/auth/telegram-token`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                  telegram_id: id,
+                  email: email
+                })
+              });
+              
+              if (tokenResponse.ok) {
+                const tokenData = await tokenResponse.json();
+                if (tokenData.custom_token) {
+                  // Sign in with the custom token
+                  const userCredential = await signInWithCustomToken(auth, tokenData.custom_token);
+                  console.log('Successfully signed in with custom token');
+                  navigate('/');
+                  return;
+                }
+              }
+              
+              // If we couldn't get a custom token, show a message to the user
+              console.log('Could not get custom token, showing error to user');
+              setError('This Telegram account is already linked to a user. Please sign in with your email and password.');
+              return;
+            } catch (tokenError) {
+              console.error('Error getting custom token:', tokenError);
+              setError('Authentication error. Please try again or use email/password login.');
+              return;
+            }
+          } else {
+            // User doesn't exist, create a new account
+            console.log('Creating new user for Telegram login');
+            const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+            const user = userCredential.user;
+            
+            // Set display name and photo URL
             await updateProfile(user, {
               displayName,
               photoURL: photo_url || null
             });
+            
+            // Create user record in database
+            const userRef = ref(database, `users/${user.uid}`);
+            await set(userRef, {
+              email,
+              displayName,
+              photoURL: photo_url || null,
+              telegramId: id,
+              telegramUsername: username || null,
+              createdAt: new Date().toISOString(),
+              referralCode: await generateUniqueReferralCode(displayName, user.uid),
+              referredBy: referralCode || null
+            });
+            
+            // If there's a referral code, update the referrer's stats
+            if (referralCode) {
+              console.log('User referred by:', referralCode);
+            }
+            
+            // Redirect to dashboard
+            navigate('/');
           }
-          
-          // Redirect to dashboard
-          navigate('/');
-        } catch (signInError) {
-          // User doesn't exist, create a new account
-          const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-          const user = userCredential.user;
-          
-          // Set display name and photo URL
-          await updateProfile(user, {
-            displayName,
-            photoURL: photo_url || null
-          });
-          
-          // Create user record in database
-          const userRef = ref(database, `users/${user.uid}`);
-          await set(userRef, {
-            email,
-            displayName,
-            photoURL: photo_url || null,
-            telegramId: id,
-            telegramUsername: username || null,
-            createdAt: new Date().toISOString(),
-            referralCode: generateUniqueReferralCode(),
-            referredBy: referralCode || null
-          });
-          
-          // If there's a referral code, update the referrer's stats
-          if (referralCode) {
-            // Find the user with this referral code
-            // This would typically be done on the backend
-            console.log('User referred by:', referralCode);
-          }
-          
-          // Redirect to dashboard
-          navigate('/');
+        } catch (authError) {
+          console.error('Error checking user existence:', authError);
+          setError('Authentication error. Please try again later.');
         }
       } catch (error) {
         console.error('Firebase auth error:', error);
