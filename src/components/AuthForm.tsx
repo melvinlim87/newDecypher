@@ -1029,7 +1029,7 @@ export function AuthForm({ type }: AuthFormProps) {
                 )}
               </button>
               
-              <div id="telegram-login-container" className="flex-1 flex items-center justify-center">
+              {/*<div id="telegram-login-container" className="flex-1 flex items-center justify-center">
                 {telegramBotId && (
                   <div className="telegram-login-button">
                     <iframe
@@ -1061,7 +1061,7 @@ export function AuthForm({ type }: AuthFormProps) {
                     <span style={{ color: 'white', fontSize: '0.9rem' }}>Telegram</span>
                   </button>
                 )}
-              </div>
+              </div>*/}
             </div>
           </div>
         </form>
